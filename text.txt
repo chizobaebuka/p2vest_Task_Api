@@ -1,5 +1,5 @@
 Steps to set up Sequelize and typescript
-1. npm install sequelize sequelize-cli typescript ts-node @types/express @types/node @types/sequelize pg express node
+1. npm install sequelize sequelize-cli typescript ts-node @types/express @types/node @types/sequelize pg express node zod 
 2. npm i -g typescript
 3. npx tsc --init // to initialize tsconfig.json
 4. npx sequelize init 

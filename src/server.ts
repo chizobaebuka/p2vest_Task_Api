@@ -1,11 +1,16 @@
 import express from 'express';
 import connection from './db/sequelize';
+import cors from 'cors';
+import authRouter from './routes/auth.route';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware setup
 app.use(express.json()); // For parsing application/json
+app.use(cors()); // Enable CORS for cross-origin requests
+app.use('/api/auth', authRouter); // Use the auth routes
+
 
 // Define routes here
 
@@ -20,6 +25,6 @@ async function testConnection() {
 }
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
   testConnection(); // Optionally test the database connection when the server starts
 });
