@@ -1,0 +1,14 @@
+Steps to set up Sequelize and typescript
+1. npm install sequelize sequelize-cli typescript ts-node @types/express @types/node @types/sequelize pg express node
+2. npm i -g typescript
+3. npx tsc --init // to initialize tsconfig.json
+4. npx sequelize init 
+5. generate the users model using 
+    - npm run model:generate UserModel --attributes username:string
+    - npm run model:generate TagModel --attributes  name:string
+    - npm run model:generate CommentModel --attributes content:string
+    - npm run model:generate TaskModel --attributes title:string
+    N/B: once its brought the file in .js change to .ts and use the import for es6 module
+6. to drop existing tables use npx sequelize-cli db:migrate:undo:all
+7. to check the statuus of the migration npx sequelize-cli db:migrate:status
+8. 

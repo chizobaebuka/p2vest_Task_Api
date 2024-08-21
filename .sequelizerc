@@ -1,0 +1,12 @@
+const path = require("path");
+// Export an object with configuration options for Sequelize CLI
+module.exports = {
+  // Configuration file path for Sequelize
+  config: path.resolve("src/db", "sequelize.config.js"),
+  // Path to the directory where models are stored
+  "models-path": path.resolve("src/db", "models"),
+  // seeders
+  "seeders-path": path.resolve("src/db", "seeders"),
+  // Set the path to the directory to store migrations
+  "migrations-path": path.resolve("src/db", "migrations"),
+};
