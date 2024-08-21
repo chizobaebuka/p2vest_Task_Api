@@ -32,6 +32,14 @@ TaskModel.init({
         type: sequelize_1.DataTypes.UUID,
         allowNull: false,
     },
+    assignedToId: {
+        type: sequelize_1.DataTypes.UUID,
+        allowNull: true,
+    },
+    dueDate: {
+        type: sequelize_1.DataTypes.DATE,
+        allowNull: true, // Due date is optional
+    },
     createdAt: {
         type: sequelize_1.DataTypes.DATE,
         allowNull: false,

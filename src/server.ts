@@ -2,6 +2,7 @@ import express from 'express';
 import connection from './db/sequelize';
 import cors from 'cors';
 import authRouter from './routes/auth.route';
+import taskRouter from './routes/task.route';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json()); // For parsing application/json
 app.use(cors()); // Enable CORS for cross-origin requests
 app.use('/api/auth', authRouter); // Use the auth routes
+app.use('/api/task', taskRouter); // Use the task routes
 
 
 // Define routes here

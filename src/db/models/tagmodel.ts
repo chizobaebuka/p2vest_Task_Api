@@ -1,5 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import connection from '../sequelize';
+import TaskModel from './taskmodel';
 
 interface TagAttributes {
   id: string;
@@ -43,5 +44,9 @@ TagModel.init(
     timestamps: true,
   }
 );
+
+TagModel.belongsToMany(TaskModel, { through: 'TaskTags', as: 'tasks' });
+TaskModel.belongsToMany(TagModel, { through: 'TaskTags', as: 'tags' });
+
 
 export default TagModel;

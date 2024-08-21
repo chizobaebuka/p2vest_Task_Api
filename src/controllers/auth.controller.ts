@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { IUser, LoginData } from '../interfaces/user.interface';
 import { AuthService } from '../service/user.service';
+import { RequestExt } from '../middleware/auth.middleware';
 
 export class AuthController {
     private authService: AuthService;
@@ -33,7 +34,7 @@ export class AuthController {
     }
 
     // // Handle creating an admin user (protected)
-    public async createAdminUser(req: Request, res: Response): Promise<Response> {
+    public async createAdminUser(req: RequestExt, res: Response): Promise<Response> {
         try {
             // Extract the current user's role from the request object
             const currentUserRole = req.user?.role as 'Admin' | 'Regular';

@@ -16,12 +16,14 @@ const express_1 = __importDefault(require("express"));
 const sequelize_1 = __importDefault(require("./db/sequelize"));
 const cors_1 = __importDefault(require("cors"));
 const auth_route_1 = __importDefault(require("./routes/auth.route"));
+const task_route_1 = __importDefault(require("./routes/task.route"));
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
 // Middleware setup
 app.use(express_1.default.json()); // For parsing application/json
 app.use((0, cors_1.default)()); // Enable CORS for cross-origin requests
 app.use('/api/auth', auth_route_1.default); // Use the auth routes
+app.use('/api/task', task_route_1.default); // Use the task routes
 // Define routes here
 // Test database connection
 function testConnection() {
