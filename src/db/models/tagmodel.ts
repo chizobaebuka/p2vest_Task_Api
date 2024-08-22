@@ -14,6 +14,15 @@ class TagModel extends Model<TagAttributes> implements TagAttributes {
   public name!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+  static associate(models: { TaskModel: typeof TaskModel }) {
+    TagModel.belongsToMany(models.TaskModel, {
+      through: 'TaskTags',
+      as: 'tasks',
+      foreignKey: 'tagId',
+      otherKey: 'taskId',
+    });
+  }
 }
 
 TagModel.init(
@@ -45,8 +54,8 @@ TagModel.init(
   }
 );
 
-TagModel.belongsToMany(TaskModel, { through: 'TaskTags', as: 'tasks' });
-TaskModel.belongsToMany(TagModel, { through: 'TaskTags', as: 'tags' });
+// TagModel.belongsToMany(TaskModel, { through: 'TaskTags', as: 'tasks' });
+// TaskModel.belongsToMany(TagModel, { through: 'TaskTags', as: 'tags' });
 
 
 export default TagModel;

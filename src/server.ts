@@ -14,6 +14,11 @@ app.use(cors()); // Enable CORS for cross-origin requests
 app.use('/api/auth', authRouter); // Use the auth routes
 app.use('/api/task', taskRouter); // Use the task routes
 
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
 
 // Define routes here
 function initializeModels() {

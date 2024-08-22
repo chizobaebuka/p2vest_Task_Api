@@ -15,6 +15,13 @@ const models = {
     TagModel: tagmodel_1.default
 };
 exports.models = models;
+tagmodel_1.default.associate({ TaskModel: taskmodel_1.default });
+usermodel_1.default.hasMany(taskmodel_1.default, { foreignKey: 'createdById' });
+sequelize_1.default.sync({ force: true }).then(() => {
+    console.log('Database synchronized');
+    sequelize_1.default.close(); // Close the connection when done for better resource management.
+    process.exit(0); // Exit the process with a success status.
+});
 Object.keys(models).forEach((modelName) => {
     if ('associate' in models[modelName]) {
         models[modelName].associate(models);

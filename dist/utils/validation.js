@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.assignTaskSchema = exports.updateTaskStatusSchema = exports.updateTaskSchema = exports.createTaskSchema = exports.loginSchema = exports.registrationSchema = void 0;
+exports.addTagsToTaskSchema = exports.createTagSchema = exports.assignTaskSchema = exports.updateTaskStatusSchema = exports.updateTaskSchema = exports.createTaskSchema = exports.loginSchema = exports.registrationSchema = void 0;
 const zod_1 = require("zod");
 const task_interface_1 = require("../interfaces/task.interface");
 exports.registrationSchema = zod_1.z.object({
@@ -34,4 +34,11 @@ exports.updateTaskStatusSchema = zod_1.z.object({
 exports.assignTaskSchema = zod_1.z.object({
     taskId: zod_1.z.string().uuid('Invalid task ID'),
     assignedToId: zod_1.z.string().uuid('Invalid assigned user ID'),
+});
+exports.createTagSchema = zod_1.z.object({
+    name: zod_1.z.string().min(1, 'Tag name is required'),
+});
+exports.addTagsToTaskSchema = zod_1.z.object({
+    taskId: zod_1.z.string().uuid('Invalid task ID'),
+    tagIds: zod_1.z.array(zod_1.z.string().uuid('Invalid tag ID')).min(1, 'At least one tag ID is required'),
 });

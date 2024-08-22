@@ -5,12 +5,16 @@ import { TaskAttributes, CreateTaskInput, TaskStatus } from '../interfaces/task.
 import { v4 as uuidv4 } from 'uuid';
 import TaskModel from '../db/models/taskmodel';
 import UserModel from '../db/models/usermodel';
+import { TagRepository } from '../repository/tag.repository';
+import TagModel from '../db/models/tagmodel';
 
 export class TaskService {
     private taskRepo: TaskRepository;
+    private tagRepo: TagRepository;
 
-    constructor(taskRepo: TaskRepository) {
-        this.taskRepo = taskRepo;
+    constructor() {
+        this.taskRepo = new TaskRepository();
+        this.tagRepo = new TagRepository();
     }
 
     public async createTask(taskData: CreateTaskInput, userId: string): Promise<TaskModel> {
@@ -61,4 +65,30 @@ export class TaskService {
 
         return task;
     }
+
+    async addTagsToTask(taskId: string, tagIds: string[]) {
+        // Fetch the task and tags to ensure they exist
+        const task = await TaskModel.findOne({
+            where: { id: taskId },
+            include: [{ model: UserModel, as: 'creator' }],
+        });
+        if (!task) return null;
+
+        const tags = await Promise.all(tagIds.map(id => this.tagRepo.getTagById(id)));
+        console.log({ tags })
+
+        // Filter out null values
+        const validTags = tags.filter((tag): tag is TagModel => tag !== null);
+        console.log({ validTags });
+
+        if (validTags.length === 0) return null;
+
+        // Associate each tag with the task individually
+        for (const tag of validTags) {
+            await task.addTags(tag);
+        }
+
+        return task;
+    }
+
 }

@@ -39,3 +39,12 @@ export const assignTaskSchema = z.object({
     taskId: z.string().uuid('Invalid task ID'),
     assignedToId: z.string().uuid('Invalid assigned user ID'),
 });
+
+export const createTagSchema = z.object({
+    name: z.string().min(1, 'Tag name is required'),
+})
+
+export const addTagsToTaskSchema = z.object({
+    taskId: z.string().uuid('Invalid task ID'),
+    tagIds: z.array(z.string().uuid('Invalid tag ID')).min(1, 'At least one tag ID is required'),
+})

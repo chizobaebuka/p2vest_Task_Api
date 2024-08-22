@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -25,6 +16,11 @@ app.use(express_1.default.json()); // For parsing application/json
 app.use((0, cors_1.default)()); // Enable CORS for cross-origin requests
 app.use('/api/auth', auth_route_1.default); // Use the auth routes
 app.use('/api/task', task_route_1.default); // Use the task routes
+// app.use('/api/tag', tagRouter); // Use the tag routes
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
+});
 // Define routes here
 function initializeModels() {
     // Ensure all models are associated
@@ -34,31 +30,27 @@ function initializeModels() {
         }
     });
 }
-function testConnection() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            yield sequelize_1.default.authenticate();
-            console.log('Database connection has been established successfully.');
-        }
-        catch (error) {
-            console.error('Unable to connect to the database:', error);
-        }
-    });
+async function testConnection() {
+    try {
+        await sequelize_1.default.authenticate();
+        console.log('Database connection has been established successfully.');
+    }
+    catch (error) {
+        console.error('Unable to connect to the database:', error);
+    }
 }
 // Test database connection
-function startServer() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            // initializeModels(); // Set up model associations
-            yield sequelize_1.default.sync(); // Sync the database
-            app.listen(PORT, () => {
-                console.log(`Server is running on http://localhost:${PORT}`);
-                testConnection(); // Optionally test the database connection when the server starts
-            });
-        }
-        catch (error) {
-            console.error('Error starting the server:', error);
-        }
-    });
+async function startServer() {
+    try {
+        // initializeModels(); // Set up model associations
+        await sequelize_1.default.sync(); // Sync the database
+        app.listen(PORT, () => {
+            console.log(`Server is running on http://localhost:${PORT}`);
+            testConnection(); // Optionally test the database connection when the server starts
+        });
+    }
+    catch (error) {
+        console.error('Error starting the server:', error);
+    }
 }
 startServer();

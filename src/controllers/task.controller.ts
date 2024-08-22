@@ -2,7 +2,7 @@ import { NextFunction, Response } from 'express';
 import { CreateTaskInput, TaskStatus } from '../interfaces/task.interface';
 import { TaskService } from '../service/task.service';
 import { RequestExt } from '../middleware/auth.middleware';
-import { assignTaskSchema, createTaskSchema, updateTaskStatusSchema } from '../utils/validation';
+import { addTagsToTaskSchema, assignTaskSchema, createTaskSchema, updateTaskStatusSchema } from '../utils/validation';
 import { z } from 'zod';
 
 export class TaskController {
@@ -76,4 +76,24 @@ export class TaskController {
             return res.status(400).json({ error: 'Error updating task status: ' + error.message });
         }
     }
+
+    public async addTagsToTask(req: RequestExt, res: Response): Promise<Response> {
+        try {
+            // Validate the request body using Zod schema
+            const { taskId, tagIds } = addTagsToTaskSchema.parse(req.body);
+
+            const task = await this.taskService.addTagsToTask(taskId, tagIds);
+            if (!task) {
+                return res.status(404).json({ message: 'Task or Tags not found' });
+            }
+
+            return res.status(200).json({ message: 'Tags added to task successfully', task });
+        } catch (error: any) {
+            if (error instanceof z.ZodError) {
+                return res.status(400).json({ error: 'Validation error', details: error.errors });
+            }
+            return res.status(500).json({ message: 'Failed to add tags to task', error: error.message });
+        }
+    }
+    
 }
