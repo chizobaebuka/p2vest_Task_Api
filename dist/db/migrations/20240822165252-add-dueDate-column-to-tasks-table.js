@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = {
-    down(queryInterface, Sequelize) {
+    up(queryInterface, Sequelize) {
         return __awaiter(this, void 0, void 0, function* () {
             yield queryInterface.addColumn('tasksTable', 'dueDate', {
                 type: Sequelize.DATE, // Use DATE type for the due date
@@ -19,7 +19,7 @@ exports.default = {
             });
         });
     },
-    up(queryInterface, Sequelize) {
+    down(queryInterface, Sequelize) {
         return __awaiter(this, void 0, void 0, function* () {
             // Remove the assignedToId column
             yield queryInterface.removeColumn('tasksTable', 'dueDate');

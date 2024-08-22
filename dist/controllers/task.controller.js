@@ -26,7 +26,6 @@ class TaskController {
                 if (!userId) {
                     return res.status(400).json({ error: 'User not authenticated' });
                 }
-                console.log({ userId });
                 const newTask = yield this.taskService.createTask(taskData, userId);
                 return res.status(201).json({ message: 'Task created successfully', task: newTask });
             }

@@ -25,6 +25,21 @@ class TaskModel extends Model<TaskAttributes> implements TaskAttributes {
   public dueDate?: Date; // Optional
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+  static associate(models: any) {
+    TaskModel.belongsTo(models.UserModel, {
+      as: 'creator',
+      foreignKey: 'createdById',
+    });
+
+    TaskModel.belongsTo(models.UserModel, {
+      as: 'assignee',
+      foreignKey: 'assignedToId',
+    });
+
+    TaskModel.belongsToMany(models.TagModel, { through: 'TaskTags', as: 'tags' });
+    models.TagModel.belongsToMany(TaskModel, { through: 'TaskTags', as: 'tasks' });
+  }
 }
 
 TaskModel.init(
@@ -78,12 +93,12 @@ TaskModel.init(
 );
 
 // Associations
-TaskModel.belongsTo(UserModel, {
-  as: 'creator',
-  foreignKey: 'createdById',
-});
+// TaskModel.belongsTo(UserModel, {
+//   as: 'creator',
+//   foreignKey: 'createdById',
+// });
 
-TaskModel.belongsToMany(TagModel, { through: 'TaskTags', as: 'tags' });
-TagModel.belongsToMany(TaskModel, { through: 'TaskTags', as: 'tasks' });
+// TaskModel.belongsToMany(TagModel, { through: 'TaskTags', as: 'tags' });
+// TagModel.belongsToMany(TaskModel, { through: 'TaskTags', as: 'tasks' });
 
 export default TaskModel;

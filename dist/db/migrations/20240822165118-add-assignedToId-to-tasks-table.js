@@ -11,18 +11,32 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = {
-    down(queryInterface, Sequelize) {
+    up(queryInterface, Sequelize) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield queryInterface.addColumn('tasksTable', 'dueDate', {
-                type: Sequelize.DATE, // Use DATE type for the due date
-                allowNull: true, // Due date is optional
+            yield queryInterface.addColumn('tasksTable', 'assignedToId', {
+                type: Sequelize.UUID,
+                allowNull: true, // Assignment is optional
+            });
+            // Add foreign key constraint for assignedToId
+            yield queryInterface.addConstraint('tasksTable', {
+                fields: ['assignedToId'],
+                type: 'foreign key',
+                name: 'fk_tasks_assigned_to',
+                references: {
+                    table: 'usersTable', // The name of the user table
+                    field: 'id',
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'SET NULL',
             });
         });
     },
-    up(queryInterface, Sequelize) {
+    down(queryInterface, Sequelize) {
         return __awaiter(this, void 0, void 0, function* () {
+            // Remove foreign key constraint
+            yield queryInterface.removeConstraint('tasksTable', 'fk_tasks_assigned_to');
             // Remove the assignedToId column
-            yield queryInterface.removeColumn('tasksTable', 'dueDate');
+            yield queryInterface.removeColumn('tasksTable', 'assignedToId');
         });
     },
 };

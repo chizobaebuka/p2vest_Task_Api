@@ -3,6 +3,7 @@ import connection from './db/sequelize';
 import cors from 'cors';
 import authRouter from './routes/auth.route';
 import taskRouter from './routes/task.route';
+import { models } from './db/models';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,8 +16,15 @@ app.use('/api/task', taskRouter); // Use the task routes
 
 
 // Define routes here
+function initializeModels() {
+  // Ensure all models are associated
+  Object.keys(models).forEach((modelName) => {
+    if ('associate' in models[modelName]) {
+      models[modelName].associate(models);
+    }
+  });
+}
 
-// Test database connection
 async function testConnection() {
   try {
     await connection.authenticate();
@@ -26,7 +34,18 @@ async function testConnection() {
   }
 }
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  testConnection(); // Optionally test the database connection when the server starts
-});
+// Test database connection
+async function startServer() {
+  try {
+    // initializeModels(); // Set up model associations
+    await connection.sync(); // Sync the database
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+      testConnection(); // Optionally test the database connection when the server starts
+    });
+  } catch (error) {
+    console.error('Error starting the server:', error);
+  }
+}
+
+startServer();

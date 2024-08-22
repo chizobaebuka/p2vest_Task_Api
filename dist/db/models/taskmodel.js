@@ -4,9 +4,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_1 = require("sequelize");
-const usermodel_1 = __importDefault(require("./usermodel"));
 const sequelize_2 = __importDefault(require("../sequelize"));
 class TaskModel extends sequelize_1.Model {
+    static associate(models) {
+        TaskModel.belongsTo(models.UserModel, {
+            as: 'creator',
+            foreignKey: 'createdById',
+        });
+        TaskModel.belongsTo(models.UserModel, {
+            as: 'assignee',
+            foreignKey: 'assignedToId',
+        });
+        TaskModel.belongsToMany(models.TagModel, { through: 'TaskTags', as: 'tags' });
+        models.TagModel.belongsToMany(TaskModel, { through: 'TaskTags', as: 'tasks' });
+    }
 }
 TaskModel.init({
     id: {
@@ -55,8 +66,10 @@ TaskModel.init({
     timestamps: true,
 });
 // Associations
-TaskModel.belongsTo(usermodel_1.default, {
-    as: 'creator',
-    foreignKey: 'createdById',
-});
+// TaskModel.belongsTo(UserModel, {
+//   as: 'creator',
+//   foreignKey: 'createdById',
+// });
+// TaskModel.belongsToMany(TagModel, { through: 'TaskTags', as: 'tags' });
+// TagModel.belongsToMany(TaskModel, { through: 'TaskTags', as: 'tasks' });
 exports.default = TaskModel;

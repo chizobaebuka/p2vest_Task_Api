@@ -22,7 +22,6 @@ export class TaskController {
                 return res.status(400).json({ error: 'User not authenticated' });
             }
 
-            console.log({ userId });
             const newTask = await this.taskService.createTask(taskData, userId);
             return res.status(201).json({ message: 'Task created successfully', task: newTask });
         } catch (error: any) {

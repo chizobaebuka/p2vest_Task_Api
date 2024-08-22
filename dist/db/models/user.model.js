@@ -3,36 +3,43 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.User = void 0;
 const sequelize_1 = require("sequelize");
 const sequelize_2 = __importDefault(require("../sequelize"));
-const taskmodel_1 = __importDefault(require("./taskmodel"));
-class TagModel extends sequelize_1.Model {
+class User extends sequelize_1.Model {
 }
-TagModel.init({
+exports.User = User;
+User.init({
     id: {
         type: sequelize_1.DataTypes.UUID,
         defaultValue: sequelize_1.DataTypes.UUIDV4,
         primaryKey: true,
-        allowNull: false,
     },
-    name: {
+    username: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+    },
+    email: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+    },
+    password: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false,
     },
     createdAt: {
         type: sequelize_1.DataTypes.DATE,
         allowNull: false,
+        defaultValue: sequelize_1.DataTypes.NOW,
     },
     updatedAt: {
         type: sequelize_1.DataTypes.DATE,
         allowNull: false,
+        defaultValue: sequelize_1.DataTypes.NOW,
     },
 }, {
-    sequelize: sequelize_2.default,
-    modelName: 'TagModel',
-    tableName: 'tagsTable',
-    timestamps: true,
+    sequelize: sequelize_2.default, // This is your Sequelize instance
+    tableName: 'usersTable', // Adjust table name as necessary
 });
-TagModel.belongsToMany(taskmodel_1.default, { through: 'TaskTags', as: 'tasks' });
-taskmodel_1.default.belongsToMany(TagModel, { through: 'TaskTags', as: 'tags' });
-exports.default = TagModel;
