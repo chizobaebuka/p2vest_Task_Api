@@ -3,6 +3,8 @@ import connection from './db/sequelize';
 import cors from 'cors';
 import authRouter from './routes/auth.route';
 import taskRouter from './routes/task.route';
+import commentRouter from './routes/comment.route';
+import tagRouter from './routes/tag.route';
 import { models } from './db/models';
 
 const app = express();
@@ -13,6 +15,8 @@ app.use(express.json()); // For parsing application/json
 app.use(cors()); // Enable CORS for cross-origin requests
 app.use('/api/auth', authRouter); // Use the auth routes
 app.use('/api/task', taskRouter); // Use the task routes
+app.use('/api/comment', commentRouter); // Use the comment routes
+app.use('/api/tag', tagRouter)
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);

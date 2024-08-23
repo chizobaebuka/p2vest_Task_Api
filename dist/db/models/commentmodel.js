@@ -8,6 +8,16 @@ const usermodel_1 = __importDefault(require("./usermodel"));
 const taskmodel_1 = __importDefault(require("./taskmodel"));
 const sequelize_2 = __importDefault(require("../sequelize"));
 class CommentModel extends sequelize_1.Model {
+    static associate() {
+        CommentModel.belongsTo(usermodel_1.default, {
+            as: 'author',
+            foreignKey: 'userId',
+        });
+        CommentModel.belongsTo(taskmodel_1.default, {
+            as: 'task',
+            foreignKey: 'taskId',
+        });
+    }
 }
 CommentModel.init({
     id: {
@@ -55,12 +65,12 @@ CommentModel.init({
     timestamps: true,
 });
 // Associations
-CommentModel.belongsTo(usermodel_1.default, {
-    as: 'author',
-    foreignKey: 'userId',
-});
-CommentModel.belongsTo(taskmodel_1.default, {
-    as: 'task',
-    foreignKey: 'taskId',
-});
+// CommentModel.belongsTo(UserModel, {
+//   as: 'author',
+//   foreignKey: 'userId',
+// });
+// CommentModel.belongsTo(TaskModel, {
+//   as: 'task',
+//   foreignKey: 'taskId',
+// });
 exports.default = CommentModel;

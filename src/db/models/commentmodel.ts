@@ -19,6 +19,18 @@ class CommentModel extends Model<CommentAttributes> implements CommentAttributes
   public userId!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+  static associate() {
+    CommentModel.belongsTo(UserModel, {
+      as: 'author',
+      foreignKey: 'userId',
+    });
+    
+    CommentModel.belongsTo(TaskModel, {
+      as: 'task',
+      foreignKey: 'taskId',
+    });
+  }
 }
 
 CommentModel.init(
@@ -71,14 +83,14 @@ CommentModel.init(
 );
 
 // Associations
-CommentModel.belongsTo(UserModel, {
-  as: 'author',
-  foreignKey: 'userId',
-});
+// CommentModel.belongsTo(UserModel, {
+//   as: 'author',
+//   foreignKey: 'userId',
+// });
 
-CommentModel.belongsTo(TaskModel, {
-  as: 'task',
-  foreignKey: 'taskId',
-});
+// CommentModel.belongsTo(TaskModel, {
+//   as: 'task',
+//   foreignKey: 'taskId',
+// });
 
 export default CommentModel;

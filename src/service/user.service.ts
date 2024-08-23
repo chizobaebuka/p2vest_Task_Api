@@ -81,5 +81,8 @@ export class AuthService {
         // Create the admin user in the database
         return this.userRepository.createUser(adminData);
     }
-    
+
+    public async getAllUsers() {
+        return this.userRepository.getAllUsers();
+    }
 }

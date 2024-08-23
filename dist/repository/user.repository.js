@@ -15,5 +15,8 @@ class UserRepository {
     async findUserByEmail(email) {
         return usermodel_1.default.findOne({ where: { email } });
     }
+    async getAllUsers() {
+        return usermodel_1.default.findAll();
+    }
 }
 exports.UserRepository = UserRepository;

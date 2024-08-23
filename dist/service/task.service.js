@@ -49,25 +49,42 @@ class TaskService {
         return task;
     }
     async addTagsToTask(taskId, tagIds) {
-        // Fetch the task and tags to ensure they exist
+        // Fetch the task to ensure it exists
         const task = await taskmodel_1.default.findOne({
             where: { id: taskId },
-            include: [{ model: usermodel_1.default, as: 'creator' }],
         });
-        if (!task)
-            return null;
-        const tags = await Promise.all(tagIds.map(id => this.tagRepo.getTagById(id)));
-        console.log({ tags });
-        // Filter out null values
-        const validTags = tags.filter((tag) => tag !== null);
-        console.log({ validTags });
-        if (validTags.length === 0)
-            return null;
-        // Associate each tag with the task individually
-        for (const tag of validTags) {
-            await task.addTags(tag);
+        if (!task) {
+            return {
+                message: "Failed to add tags to task",
+                error: "Task not found",
+            };
         }
-        return task;
+        // Fetch the tags to ensure they exist
+        const tags = await Promise.all(tagIds.map(id => this.tagRepo.getTagById(id)));
+        // Filter out null values (i.e., non-existent tags)
+        const validTags = tags.filter((tag) => tag !== null);
+        if (validTags.length === 0) {
+            return {
+                message: "Failed to add tags to task",
+                error: "No valid tags found",
+            };
+        }
+        // Since `tagId` is not designed to hold multiple tags, we'll iterate over `validTags`
+        // and update the task's `tagId` for each valid tag
+        for (const tag of validTags) {
+            await task.update({ tagId: tag.id });
+        }
+        return {
+            message: "Tags successfully associated with task",
+            task: task,
+        };
+    }
+    async getAllTasksWithFilters(filters) {
+        const result = await this.taskRepo.getAllTasksWithFilters(filters);
+        return result.data;
+    }
+    async getAllTasks() {
+        return await this.taskRepo.getAllTasks();
     }
 }
 exports.TaskService = TaskService;

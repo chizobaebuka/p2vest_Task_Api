@@ -1,7 +1,7 @@
 // src/service/task.service.ts
 
 import { TaskRepository } from '../repository/task.repository';
-import { TaskAttributes, CreateTaskInput, TaskStatus } from '../interfaces/task.interface';
+import { TaskAttributes, CreateTaskInput, TaskStatus, GetTaskFilter } from '../interfaces/task.interface';
 import { v4 as uuidv4 } from 'uuid';
 import TaskModel from '../db/models/taskmodel';
 import UserModel from '../db/models/usermodel';
@@ -67,28 +67,50 @@ export class TaskService {
     }
 
     async addTagsToTask(taskId: string, tagIds: string[]) {
-        // Fetch the task and tags to ensure they exist
+        // Fetch the task to ensure it exists
         const task = await TaskModel.findOne({
             where: { id: taskId },
-            include: [{ model: UserModel, as: 'creator' }],
         });
-        if (!task) return null;
-
-        const tags = await Promise.all(tagIds.map(id => this.tagRepo.getTagById(id)));
-        console.log({ tags })
-
-        // Filter out null values
-        const validTags = tags.filter((tag): tag is TagModel => tag !== null);
-        console.log({ validTags });
-
-        if (validTags.length === 0) return null;
-
-        // Associate each tag with the task individually
-        for (const tag of validTags) {
-            await task.addTags(tag);
+    
+        if (!task) {
+            return {
+                message: "Failed to add tags to task",
+                error: "Task not found",
+            };
         }
+    
+        // Fetch the tags to ensure they exist
+        const tags = await Promise.all(tagIds.map(id => this.tagRepo.getTagById(id)));
+    
+        // Filter out null values (i.e., non-existent tags)
+        const validTags = tags.filter((tag): tag is TagModel => tag !== null);
+    
+        if (validTags.length === 0) {
+            return {
+                message: "Failed to add tags to task",
+                error: "No valid tags found",
+            };
+        }
+    
+        // Since `tagId` is not designed to hold multiple tags, we'll iterate over `validTags`
+        // and update the task's `tagId` for each valid tag
+        for (const tag of validTags) {
+            await task.update({ tagId: tag.id });
+        }
+    
+        return {
+            message: "Tags successfully associated with task",
+            task: task,
+        };
+    }
+    
 
-        return task;
+    public async getAllTasksWithFilters(filters: GetTaskFilter): Promise<TaskModel[]> {
+        const result =  await this.taskRepo.getAllTasksWithFilters(filters);
+        return result.data;
     }
 
+    async getAllTasks(): Promise<TaskModel[]> {
+        return await this.taskRepo.getAllTasks();
+    }
 }

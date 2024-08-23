@@ -57,5 +57,8 @@ class AuthService {
         // Create the admin user in the database
         return this.userRepository.createUser(adminData);
     }
+    async getAllUsers() {
+        return this.userRepository.getAllUsers();
+    }
 }
 exports.AuthService = AuthService;

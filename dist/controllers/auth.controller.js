@@ -47,5 +47,14 @@ class AuthController {
             return res.status(400).json({ error: error.message });
         }
     }
+    async getAllUsers(req, res) {
+        try {
+            const users = await this.authService.getAllUsers();
+            return res.status(200).json({ users });
+        }
+        catch (error) {
+            return res.status(500).json({ error: error.message });
+        }
+    }
 }
 exports.AuthController = AuthController;

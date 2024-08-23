@@ -3,7 +3,6 @@ import { TaskController } from '../controllers/task.controller';
 import { TaskService } from '../service/task.service';
 import { TaskRepository } from '../repository/task.repository';
 import { asyncMiddleware, authenticate, authorize } from '../middleware/auth.middleware';
-import { TagRepository } from '../repository/tag.repository';
 
 const router = Router();
 const taskRepo = new TaskRepository();
@@ -38,5 +37,8 @@ router.post(
     authorize(['Regular']),
     taskController.addTagsToTask.bind(taskController)
 );
+
+router.get('/all-tasks', authenticate, authorize(['Admin']), (req, res) => taskController.getAllTasks(req, res));
+router.get('/filtered-tasks', authenticate, authorize(['Admin', 'Regular']), (req, res) => taskController.getAllTasksWithFilters(req, res));
 
 export default router;

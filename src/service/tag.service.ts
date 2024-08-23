@@ -12,4 +12,6 @@ export class TagService {
     public async createTag(tagName: string): Promise<TagModel> {
         return this.tagRepo.createTag(tagName); // Call the TagRepository method
     }
+
+    
 }

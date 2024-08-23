@@ -54,7 +54,7 @@ TagModel.init(
   }
 );
 
-// TagModel.belongsToMany(TaskModel, { through: 'TaskTags', as: 'tasks' });
+// TagModel.belongsToMany(TaskModel, { through: 'TaskTags', as: 'tasks', foreignKey: 'tagId', otherKey: 'taskId' });
 // TaskModel.belongsToMany(TagModel, { through: 'TaskTags', as: 'tags' });
 
 

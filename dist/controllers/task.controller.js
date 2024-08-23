@@ -70,8 +70,8 @@ class TaskController {
     }
     async addTagsToTask(req, res) {
         try {
-            // Validate the request body using Zod schema
-            const { taskId, tagIds } = validation_1.addTagsToTaskSchema.parse(req.body);
+            const { tagIds } = validation_1.addTagsToTaskSchema.parse(req.body);
+            const { taskId } = validation_1.taskIdParamSchema.parse(req.params);
             const task = await this.taskService.addTagsToTask(taskId, tagIds);
             if (!task) {
                 return res.status(404).json({ message: 'Task or Tags not found' });
@@ -83,6 +83,33 @@ class TaskController {
                 return res.status(400).json({ error: 'Validation error', details: error.errors });
             }
             return res.status(500).json({ message: 'Failed to add tags to task', error: error.message });
+        }
+    }
+    async getAllTasks(req, res) {
+        try {
+            const tasks = await this.taskService.getAllTasks();
+            return res.status(200).json({ tasks });
+        }
+        catch (error) {
+            return res.status(500).json({ error: 'Error fetching tasks' });
+        }
+    }
+    async getAllTasksWithFilters(req, res) {
+        try {
+            const { page, limit, sortBy, sortOrder, status, dueDate, tagId } = req.query;
+            const filters = {
+                page: page ? parseInt(page, 10) : 1,
+                limit: limit ? parseInt(limit, 10) : 10,
+                sortBy: sortBy || 'dueDate',
+                sortOrder: sortOrder === 'ASC' || sortOrder === 'DESC' ? sortOrder : undefined,
+                status: status,
+                dueDate: dueDate ? new Date(dueDate) : undefined,
+                tagId: tagId,
+            };
+            const tasks = await this.taskService.getAllTasksWithFilters(filters);
+            return res.status(200).json({ tasks });
+        }
+        catch (error) {
         }
     }
 }

@@ -1,4 +1,5 @@
 import { ICore } from ".";
+import TaskModel from "../db/models/taskmodel";
 
 export interface TaskAttributes extends ICore {
     title: string;
@@ -34,6 +35,18 @@ export enum TaskStatus {
     Pending = 'Pending',
     InProgress = 'In Progress',
     Completed = 'Completed'
+}
+
+export interface GetTaskFilter {
+    page?: number;
+    limit?: number;
+    sortBy?: string 
+    sortOrder?: 'ASC' | 'DESC'; 
+    status?: 'Pending' | 'In Progress' | 'Completed'; 
+    createdById?: string; 
+    assignedToId?: string; 
+    dueDate?: Date; 
+    tagId?: string;
 }
 
 

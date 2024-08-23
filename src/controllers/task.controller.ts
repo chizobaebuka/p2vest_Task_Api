@@ -1,9 +1,11 @@
-import { NextFunction, Response } from 'express';
-import { CreateTaskInput, TaskStatus } from '../interfaces/task.interface';
+import { Response } from 'express';
+import { GetTaskFilter, TaskStatus } from '../interfaces/task.interface';
 import { TaskService } from '../service/task.service';
 import { RequestExt } from '../middleware/auth.middleware';
-import { addTagsToTaskSchema, assignTaskSchema, createTaskSchema, updateTaskStatusSchema } from '../utils/validation';
+import { addTagsToTaskSchema, assignTaskSchema, createTaskSchema, GetTaskFilterSchema, taskIdParamSchema, updateTaskStatusSchema } from '../utils/validation';
 import { z } from 'zod';
+import { FindOptions, WhereOptions } from 'sequelize';
+import TaskModel from '../db/models/taskmodel';
 
 export class TaskController {
     private taskService: TaskService;
@@ -79,8 +81,8 @@ export class TaskController {
 
     public async addTagsToTask(req: RequestExt, res: Response): Promise<Response> {
         try {
-            // Validate the request body using Zod schema
-            const { taskId, tagIds } = addTagsToTaskSchema.parse(req.body);
+            const { tagIds } = addTagsToTaskSchema.parse(req.body);
+            const { taskId } = taskIdParamSchema.parse(req.params);
 
             const task = await this.taskService.addTagsToTask(taskId, tagIds);
             if (!task) {
@@ -95,5 +97,35 @@ export class TaskController {
             return res.status(500).json({ message: 'Failed to add tags to task', error: error.message });
         }
     }
+    
+    public async getAllTasks(req: RequestExt, res: Response): Promise<Response> {
+        try {
+            const tasks = await this.taskService.getAllTasks();
+            return res.status(200).json({ tasks });
+        } catch (error: any) {
+            return res.status(500).json({ error: 'Error fetching tasks' });
+        }
+    }
+
+    async getAllTasksWithFilters(req: RequestExt, res: Response) {
+        try {
+            const { page, limit, sortBy, sortOrder, status, dueDate, tagId } = req.query;
+
+            const filters: GetTaskFilter = {
+                page: page ? parseInt(page as string, 10) : 1,
+                limit: limit ? parseInt(limit as string, 10) : 10,
+                sortBy: sortBy as string || 'dueDate',
+                sortOrder: sortOrder === 'ASC' || sortOrder === 'DESC' ? sortOrder as 'ASC' | 'DESC' : undefined,
+                status: status as 'Pending' | 'In Progress' | 'Completed' | undefined,
+                dueDate: dueDate ? new Date(dueDate as string) : undefined,
+                tagId: tagId as string,
+            };
+            const tasks = await this.taskService.getAllTasksWithFilters(filters);
+            return res.status(200).json({ tasks });
+        } catch (error) {
+            
+        }
+    }
+    
     
 }

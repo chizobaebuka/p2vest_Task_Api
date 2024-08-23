@@ -51,4 +51,13 @@ export class AuthController {
             return res.status(400).json({ error: error.message });
         }
     }
+
+    public async getAllUsers(req: RequestExt, res: Response): Promise<Response> {
+        try {
+            const users = await this.authService.getAllUsers();
+            return res.status(200).json({ users });
+        } catch (error: any) {
+            return res.status(500).json({ error: error.message });
+        }
+    }
 }

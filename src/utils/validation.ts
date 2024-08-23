@@ -45,6 +45,28 @@ export const createTagSchema = z.object({
 })
 
 export const addTagsToTaskSchema = z.object({
-    taskId: z.string().uuid('Invalid task ID'),
     tagIds: z.array(z.string().uuid('Invalid tag ID')).min(1, 'At least one tag ID is required'),
 })
+
+
+export const addCommentSchema = z.object({
+    content: z.string().min(1, 'Content is required'),  // Validate that content is a non-empty string
+});
+
+export const taskIdParamSchema = z.object({
+    taskId: z.string().uuid('Invalid task ID'),
+})
+
+export const addTagSchema = z.object({
+    name: z.string().min(1, 'Tag name is required'),
+});
+
+export const GetTaskFilterSchema = z.object({
+    page: z.number().min(1).optional(),
+    limit: z.number().min(1).max(100).optional(),
+    sortBy: z.enum(['dueDate']).optional(), // Sorting only by dueDate for simplicity
+    sortOrder: z.enum(['ASC', 'DESC']).optional(),
+    status: z.enum(['Pending', 'In Progress', 'Completed']).optional(),
+    tagId: z.string().uuid().optional(),
+    dueDate: z.string().transform((str) => new Date(str)).optional(), // Assuming dueDate is passed as a string
+});

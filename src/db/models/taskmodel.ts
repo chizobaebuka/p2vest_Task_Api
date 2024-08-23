@@ -2,6 +2,7 @@ import { BelongsToManyAddAssociationMixin, DataTypes, Model } from 'sequelize';
 import UserModel from './usermodel';
 import connection from '../sequelize';
 import TagModel from './tagmodel';
+import CommentModel from './commentmodel';
 
 interface TaskAttributes {
   id: string;
@@ -11,6 +12,7 @@ interface TaskAttributes {
   createdById: string;
   assignedToId?: string; // Optional
   dueDate?: Date; // Optional
+  tagId?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -23,6 +25,7 @@ class TaskModel extends Model<TaskAttributes> implements TaskAttributes {
   public createdById!: string;
   public assignedToId?: string; // Optional
   public dueDate?: Date; // Optional
+  public tagId?: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -39,7 +42,17 @@ class TaskModel extends Model<TaskAttributes> implements TaskAttributes {
       foreignKey: 'assignedToId',
     });
 
-    TaskModel.belongsToMany(TagModel, { through: 'TaskTags', as: 'tags' });
+    TaskModel.belongsToMany(TagModel, { through: 'TaskTags', as: 'tags', foreignKey: 'taskId', otherKey: 'tagId' });
+
+    CommentModel.belongsTo(TaskModel, {
+      as: 'task',
+      foreignKey: 'taskId',
+    })
+    
+    TaskModel.hasMany(CommentModel, {
+      foreignKey: 'taskId',
+      as: 'comments',
+    });
   }
 }
 
@@ -76,6 +89,14 @@ TaskModel.init(
       type: DataTypes.DATE,
       allowNull: true, // Due date is optional
     },
+    tagId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'tagsTable',
+        key: 'id',
+      }
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -94,12 +115,12 @@ TaskModel.init(
 );
 
 // Associations
-TaskModel.belongsTo(UserModel, {
-  as: 'creator',
-  foreignKey: 'createdById',
-});
+// TaskModel.belongsTo(UserModel, {
+//   as: 'creator',
+//   foreignKey: 'createdById',
+// });
 
-TaskModel.belongsToMany(TagModel, { through: 'TaskTags', as: 'tags' });
-TagModel.belongsToMany(TaskModel, { through: 'TaskTags', as: 'tasks' });
+// TaskModel.belongsToMany(TagModel, { through: 'TaskTags', as: 'tags' });
+// TagModel.belongsToMany(TaskModel, { through: 'TaskTags', as: 'tasks' });
 
 export default TaskModel;

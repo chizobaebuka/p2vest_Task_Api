@@ -16,4 +16,6 @@ router.put('/:taskId/status', auth_middleware_1.authenticate, (0, auth_middlewar
 (req, res) => taskController.updateTaskStatus(req, res));
 // router.post('/:taskId/tags', authenticate, authorize([ 'Regular' ]), (req, res) => taskController.addTagsToTask(req, res));
 router.post('/:taskId/tags', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Regular']), taskController.addTagsToTask.bind(taskController));
+router.get('/all-tasks', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Admin']), (req, res) => taskController.getAllTasks(req, res));
+router.get('/filtered-tasks', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Admin', 'Regular']), (req, res) => taskController.getAllTasksWithFilters(req, res));
 exports.default = router;
