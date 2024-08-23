@@ -7,6 +7,9 @@ import TaskModel from '../db/models/taskmodel';
 import UserModel from '../db/models/usermodel';
 import { TagRepository } from '../repository/tag.repository';
 import TagModel from '../db/models/tagmodel';
+import { NotificationService } from './notification.service';
+import { client } from '../db/redis.client'; 
+import { cacheData, getCachedData } from '../utils/helper';
 
 export class TaskService {
     private taskRepo: TaskRepository;
@@ -25,8 +28,11 @@ export class TaskService {
             id: uuidv4(), // Generate a new UUID for the task
             status: taskData.status || 'Pending'
         };
-
-        return await this.taskRepo.createTask(taskToCreate);
+        
+        
+        const task = await this.taskRepo.createTask(taskToCreate);
+        await cacheData(`task:${task.id}`, JSON.stringify(task));
+        return task;
     }
 
     public async assignTask(taskId: string, assignedToId: string): Promise<TaskModel | null> {
@@ -43,8 +49,14 @@ export class TaskService {
 
         task.assignedToId = assignedToId;
         task.status = 'In Progress'; // Change status to In Progress once assigned
-        await task.save();
 
+        const message = `You have been assigned a new task: ${task.title}`;
+        await NotificationService.createNotification(assignedUser.id, taskId, 'task_assigned', message);
+
+        await client.publish('task_notifications', JSON.stringify({ userId: assignedUser.id, taskId, type: 'task_assigned', message }));
+        
+        await task.save();
+        await cacheData(`task:${task.id}`, JSON.stringify(task));
         return task;
     }
 
@@ -63,6 +75,10 @@ export class TaskService {
         task.status = status;
         await task.save();
 
+        const message = `The status of task "${task.title}" has been updated to ${status}`;
+        await NotificationService.createNotification(task.assignedToId, taskId, 'task_status_updated', message);
+        
+        await cacheData(`task:${task.id}`, JSON.stringify(task));
         return task;
     }
 
@@ -98,6 +114,7 @@ export class TaskService {
             await task.update({ tagId: tag.id });
         }
     
+        await cacheData(`task:${task.id}`, JSON.stringify(task));
         return {
             message: "Tags successfully associated with task",
             task: task,
@@ -106,11 +123,34 @@ export class TaskService {
     
 
     public async getAllTasksWithFilters(filters: GetTaskFilter): Promise<TaskModel[]> {
-        const result =  await this.taskRepo.getAllTasksWithFilters(filters);
+        const cacheKey = `tasks:filters:${JSON.stringify(filters)}`;
+        const cachedData = await getCachedData(cacheKey);
+        console.log({ cacheData: cachedData });
+
+        if (cachedData) {
+            console.log('Cache hit');
+            return JSON.parse(cachedData) as TaskModel[];
+        }
+
+
+        const result = await this.taskRepo.getAllTasksWithFilters(filters);
+        await cacheData(cacheKey, JSON.stringify(result.data));
         return result.data;
     }
 
     async getAllTasks(): Promise<TaskModel[]> {
-        return await this.taskRepo.getAllTasks();
+        const cacheKey = 'tasks:all';
+        const cachedData = await getCachedData(cacheKey);
+        console.log({ cachedData });
+
+        if (cachedData) {
+            console.log('Cache hit');
+            return JSON.parse(cachedData) as TaskModel[];
+        }
+
+        console.log('Cache miss');
+        const tasks = await this.taskRepo.getAllTasks();
+        await cacheData(cacheKey, JSON.stringify(tasks));
+        return tasks;
     }
 }

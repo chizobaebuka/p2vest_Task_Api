@@ -10,6 +10,9 @@ const uuid_1 = require("uuid");
 const taskmodel_1 = __importDefault(require("../db/models/taskmodel"));
 const usermodel_1 = __importDefault(require("../db/models/usermodel"));
 const tag_repository_1 = require("../repository/tag.repository");
+const notification_service_1 = require("./notification.service");
+const redis_client_1 = require("../db/redis.client");
+const helper_1 = require("../utils/helper");
 class TaskService {
     constructor() {
         this.taskRepo = new task_repository_1.TaskRepository();
@@ -17,7 +20,9 @@ class TaskService {
     }
     async createTask(taskData, userId) {
         const taskToCreate = Object.assign(Object.assign({}, taskData), { createdById: userId, id: (0, uuid_1.v4)(), status: taskData.status || 'Pending' });
-        return await this.taskRepo.createTask(taskToCreate);
+        const task = await this.taskRepo.createTask(taskToCreate);
+        await (0, helper_1.cacheData)(`task:${task.id}`, JSON.stringify(task));
+        return task;
     }
     async assignTask(taskId, assignedToId) {
         const task = await this.taskRepo.findById(taskId);
@@ -31,7 +36,11 @@ class TaskService {
         }
         task.assignedToId = assignedToId;
         task.status = 'In Progress'; // Change status to In Progress once assigned
+        const message = `You have been assigned a new task: ${task.title}`;
+        await notification_service_1.NotificationService.createNotification(assignedUser.id, taskId, 'task_assigned', message);
+        await redis_client_1.client.publish('task_notifications', JSON.stringify({ userId: assignedUser.id, taskId, type: 'task_assigned', message }));
         await task.save();
+        await (0, helper_1.cacheData)(`task:${task.id}`, JSON.stringify(task));
         return task;
     }
     async updateTaskStatus(taskId, status, userId, userRole) {
@@ -46,6 +55,9 @@ class TaskService {
         // Update the task status
         task.status = status;
         await task.save();
+        const message = `The status of task "${task.title}" has been updated to ${status}`;
+        await notification_service_1.NotificationService.createNotification(task.assignedToId, taskId, 'task_status_updated', message);
+        await (0, helper_1.cacheData)(`task:${task.id}`, JSON.stringify(task));
         return task;
     }
     async addTagsToTask(taskId, tagIds) {
@@ -74,17 +86,36 @@ class TaskService {
         for (const tag of validTags) {
             await task.update({ tagId: tag.id });
         }
+        await (0, helper_1.cacheData)(`task:${task.id}`, JSON.stringify(task));
         return {
             message: "Tags successfully associated with task",
             task: task,
         };
     }
     async getAllTasksWithFilters(filters) {
+        const cacheKey = `tasks:filters:${JSON.stringify(filters)}`;
+        const cachedData = await (0, helper_1.getCachedData)(cacheKey);
+        console.log({ cacheData: cachedData });
+        if (cachedData) {
+            console.log('Cache hit');
+            return JSON.parse(cachedData);
+        }
         const result = await this.taskRepo.getAllTasksWithFilters(filters);
+        await (0, helper_1.cacheData)(cacheKey, JSON.stringify(result.data));
         return result.data;
     }
     async getAllTasks() {
-        return await this.taskRepo.getAllTasks();
+        const cacheKey = 'tasks:all';
+        const cachedData = await (0, helper_1.getCachedData)(cacheKey);
+        console.log({ cachedData });
+        if (cachedData) {
+            console.log('Cache hit');
+            return JSON.parse(cachedData);
+        }
+        console.log('Cache miss');
+        const tasks = await this.taskRepo.getAllTasks();
+        await (0, helper_1.cacheData)(cacheKey, JSON.stringify(tasks));
+        return tasks;
     }
 }
 exports.TaskService = TaskService;

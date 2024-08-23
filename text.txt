@@ -12,3 +12,21 @@ Steps to set up Sequelize and typescript
 6. to drop existing tables use npx sequelize-cli db:migrate:undo:all
 7. to check the statuus of the migration npx sequelize-cli db:migrate:status
 8. 
+
+
+
+SETTING UP REDIS
+1. npm i @types/express @types/axios @types/cors @types/dotenv @types/redis
+2. npm i express axios cors dotenv redis
+3. touch ./redis.client.ts
+4. set up the redis configuration in this file path above 
+    - brew install redis
+    - start server using redis-server
+    - to check your password for the configuration use redis-cli CONFIG GET requirepass
+    - set up your cinfiguration file without password if none
+    
+5. Go to redisCloud and create or login your account
+6. Select the database you want or add yours
+7. Click on connect on the endpoint and copy the configuration file and paste into the redis.client.ts file created 
+
+

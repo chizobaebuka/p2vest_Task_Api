@@ -11,6 +11,7 @@ const task_route_1 = __importDefault(require("./routes/task.route"));
 const comment_route_1 = __importDefault(require("./routes/comment.route"));
 const tag_route_1 = __importDefault(require("./routes/tag.route"));
 const models_1 = require("./db/models");
+const redis_client_1 = require("./db/redis.client");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
 // Middleware setup
@@ -20,6 +21,7 @@ app.use('/api/auth', auth_route_1.default); // Use the auth routes
 app.use('/api/task', task_route_1.default); // Use the task routes
 app.use('/api/comment', comment_route_1.default); // Use the comment routes
 app.use('/api/tag', tag_route_1.default);
+// Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('Something broke!');
@@ -42,11 +44,12 @@ async function testConnection() {
         console.error('Unable to connect to the database:', error);
     }
 }
-// Test database connection
+// Start the server
 async function startServer() {
     try {
-        // initializeModels(); // Set up model associations
         await sequelize_1.default.sync(); // Sync the database
+        // Connect to Redis
+        await (0, redis_client_1.connectClient)();
         app.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);
             testConnection(); // Optionally test the database connection when the server starts
@@ -56,4 +59,18 @@ async function startServer() {
         console.error('Error starting the server:', error);
     }
 }
+// Handle shutdown
+async function shutdown() {
+    console.log('Shutting down...');
+    try {
+        await (0, redis_client_1.closeClient)(); // Close Redis connection
+        await sequelize_1.default.close(); // Close database connection
+    }
+    catch (err) {
+        console.error('Error during shutdown:', err);
+    }
+    process.exit(0); // Exit process
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 startServer();
