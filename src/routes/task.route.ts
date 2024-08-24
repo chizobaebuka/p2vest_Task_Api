@@ -11,7 +11,6 @@ const taskController = new TaskController(taskService);
 
 /**
    * @swagger
-   * /api/task
    * tags:
    *   name: Tasks
    *   description: API endpoints to manage task

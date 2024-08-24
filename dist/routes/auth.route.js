@@ -7,7 +7,6 @@ const authRouter = (0, express_1.Router)();
 const authController = new auth_controller_1.AuthController();
 /**
    * @swagger
-   * /api/auth
    * tags:
    *   name: Users
    *   description: API endpoints to manage users

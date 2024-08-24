@@ -10,7 +10,6 @@ const router = express_1.default.Router();
 const commentController = new tag_controller_1.TagController();
 /**
    * @swagger
-   * /api/tag
    * tags:
    *   name: Tags
    *   description: API endpoints to manage comments

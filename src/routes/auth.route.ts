@@ -7,7 +7,6 @@ const authController = new AuthController();
 
 /**
    * @swagger
-   * /api/auth
    * tags:
    *   name: Users
    *   description: API endpoints to manage users

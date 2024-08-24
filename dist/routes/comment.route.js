@@ -11,7 +11,6 @@ const router = express_1.default.Router();
 const commentController = new comment_controller_1.CommentController();
 /**
    * @swagger
-   * /api/comment
    * tags:
    *   name: Comments
    *   description: API endpoints to manage comments

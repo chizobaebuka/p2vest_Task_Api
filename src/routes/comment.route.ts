@@ -8,7 +8,6 @@ const commentController = new CommentController();
 
 /**
    * @swagger
-   * /api/comment
    * tags:
    *   name: Comments
    *   description: API endpoints to manage comments
