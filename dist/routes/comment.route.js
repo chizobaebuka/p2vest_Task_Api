@@ -9,6 +9,13 @@ const comment_controller_1 = require("../controllers/comment.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = express_1.default.Router();
 const commentController = new comment_controller_1.CommentController();
+/**
+   * @swagger
+   * /api/comment
+   * tags:
+   *   name: Comments
+   *   description: API endpoints to manage comments
+*/
 // Bind the methods to the controller instance
 router.post('/add-comment/:taskId', auth_middleware_1.authenticate, commentController.addComment.bind(commentController));
 router.put('/edit-comment/:commentId', auth_middleware_1.authenticate, commentController.editComment.bind(commentController));

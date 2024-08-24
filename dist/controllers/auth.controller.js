@@ -33,6 +33,7 @@ class AuthController {
             const currentUserRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
             // Ensure that only admins can create other admins
             if (currentUserRole !== 'Admin') {
+                res.status(401).json({ error: 'Unauthorized attempt to create admin user' });
                 console.error('Unauthorized attempt to create admin user');
                 throw new Error('Only Admins can create other Admins');
             }

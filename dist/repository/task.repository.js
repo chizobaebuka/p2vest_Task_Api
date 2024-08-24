@@ -4,7 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TaskRepository = void 0;
+const tagmodel_1 = __importDefault(require("../db/models/tagmodel"));
 const taskmodel_1 = __importDefault(require("../db/models/taskmodel"));
+const usermodel_1 = __importDefault(require("../db/models/usermodel"));
 class TaskRepository {
     async createTask(taskData) {
         return await taskmodel_1.default.create(taskData);
@@ -21,7 +23,7 @@ class TaskRepository {
         return await taskmodel_1.default.findAll();
     }
     async getAllTasksWithFilters(filters) {
-        const { page = 1, limit = 10, sortBy = 'dueDate', sortOrder = 'ASC', status, dueDate, tagId } = filters;
+        const { page = 1, limit = 10, sortBy = 'dueDate', sortOrder = 'ASC', status, dueDate, tagId, } = filters;
         const offset = (page - 1) * limit;
         // Build the where options based on the provided filters
         const whereOptions = {};
@@ -39,6 +41,16 @@ class TaskRepository {
             limit,
             offset,
             order: [[String(sortBy), String(sortOrder)]],
+            include: [
+                {
+                    model: tagmodel_1.default,
+                    as: 'tags',
+                },
+                {
+                    model: usermodel_1.default,
+                    as: 'users'
+                }
+            ],
         };
         const tasks = await taskmodel_1.default.findAll(options);
         const total = await taskmodel_1.default.count({ where: whereOptions });
@@ -48,6 +60,9 @@ class TaskRepository {
             limit,
             data: tasks,
         };
+    }
+    async deleteTaskById(taskId) {
+        return await taskmodel_1.default.destroy({ where: { id: taskId } });
     }
 }
 exports.TaskRepository = TaskRepository;

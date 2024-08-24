@@ -1,6 +1,7 @@
-// src/server.ts
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
+import helmet from 'helmet';
 import connection from './db/sequelize';
 import authRouter from './routes/auth.route';
 import taskRouter from './routes/task.route';
@@ -10,6 +11,8 @@ import { connectClient, closeClient } from './db/redis.client';
 import { Server } from 'socket.io';
 import http from 'http';
 import bodyParser from 'body-parser';
+import swaggerSpec from './swagger';
+import swaggerUi from 'swagger-ui-express';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +24,8 @@ export const io = new Server(server);
 io.on('connection', (socket) => {
   console.log('Client connected');
 
+  socket.emit('message', 'Welcome to the server!');
+
   socket.on('disconnect', () => {
     console.log('Client disconnected');
   });
@@ -29,7 +34,21 @@ io.on('connection', (socket) => {
 // Middleware setup
 app.use(express.json());
 app.use(cors());
-app.use(bodyParser.json());
+app.use(compression());
+app.use(helmet());
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: '20mb',
+  })
+);
+app.use(express.text({ limit: '20mb' }));
+app.use(
+  express.json({
+    type: 'application/vnd.api+json',
+    limit: '20mb',
+  })
+);
 
 // Route setup
 app.use('/api/auth', authRouter);
@@ -42,6 +61,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
+
+// Swagger setup
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 async function testConnection() {
   try {

@@ -38,6 +38,7 @@ export class AuthController {
             
             // Ensure that only admins can create other admins
             if (currentUserRole !== 'Admin') {
+                res.status(401).json({ error: 'Unauthorized attempt to create admin user' });
                 console.error('Unauthorized attempt to create admin user');
                 throw new Error('Only Admins can create other Admins');
             }
@@ -50,7 +51,6 @@ export class AuthController {
             return res.status(400).json({ error: error.message });
         }
     }
-    
 
     public async getAllUsers(req: RequestExt, res: Response): Promise<Response> {
         const cacheKey = 'users:all';
@@ -89,5 +89,4 @@ export class AuthController {
     
         return res.status(200).json({ users });
     }
-    
 }

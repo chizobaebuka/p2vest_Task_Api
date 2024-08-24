@@ -1,9 +1,5 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
+import swaggerJSDoc from "swagger-jsdoc";
+
 const swaggerDefinition = {
     swagger: '2.0',
     info: {
@@ -91,12 +87,12 @@ const swaggerDefinition = {
                             type: 'object',
                             properties: {
                                 email: {
-                                    type: 'string',
+                                    type:'string',
                                     description: 'The email of the user',
                                     format: 'email',
                                 },
                                 password: {
-                                    type: 'string',
+                                    type:'string',
                                     description: 'The password of the user',
                                 },
                             },
@@ -152,7 +148,7 @@ const swaggerDefinition = {
                         description: 'Internal Server Error',
                     },
                 },
-            }
+            } 
         },
         '/api/auth/create-admin': {
             post: {
@@ -368,7 +364,7 @@ const swaggerDefinition = {
                             type: 'object',
                             properties: {
                                 status: {
-                                    type: 'string',
+                                    type:'string',
                                     enum: ['Pending', 'In Progress', 'Completed'],
                                 },
                             },
@@ -454,7 +450,7 @@ const swaggerDefinition = {
                         schema: {
                             type: 'array',
                             items: {
-                                type: 'string',
+                                type:'string',
                             },
                         },
                     },
@@ -581,7 +577,7 @@ const swaggerDefinition = {
                         name: 'page',
                         description: 'Filter tasks by page',
                         schema: {
-                            type: 'number',
+                            type:'number',
                         },
                     },
                     {
@@ -589,15 +585,15 @@ const swaggerDefinition = {
                         name: 'limit',
                         description: 'Filter tasks by limit',
                         schema: {
-                            type: 'number',
+                            type:'number',
                         },
                     },
                     {
                         in: 'query',
-                        name: 'status',
+                        name:'status',
                         description: 'Filter tasks by status (Pending, In Progress, Completed)',
                         schema: {
-                            type: 'string',
+                            type:'string',
                             enum: ['Pending', 'In Progress', 'Completed'],
                         },
                     },
@@ -606,7 +602,7 @@ const swaggerDefinition = {
                         name: 'sortBy',
                         description: 'sorts by the provided field',
                         schema: {
-                            type: 'string',
+                            type:'string',
                             format: 'uuid',
                         },
                     },
@@ -615,7 +611,7 @@ const swaggerDefinition = {
                         name: 'sortOrder',
                         description: 'orders the filters in asc or desc',
                         schema: {
-                            type: 'string',
+                            type:'string',
                             format: 'uuid',
                         },
                     },
@@ -624,7 +620,7 @@ const swaggerDefinition = {
                         name: 'dueDate',
                         description: 'Filter tasks by dueDate of the task',
                         schema: {
-                            type: 'string',
+                            type:'string',
                         },
                     },
                     {
@@ -632,7 +628,7 @@ const swaggerDefinition = {
                         name: 'tagId',
                         description: 'Filter tasks by tag ID',
                         schema: {
-                            type: 'string',
+                            type:'string',
                         },
                     },
                 ],
@@ -890,7 +886,7 @@ const swaggerDefinition = {
                         name: 'commentId',
                         description: 'The ID of the comment',
                         schema: {
-                            type: 'string',
+                            type:'string',
                             format: 'uuid',
                         },
                     },
@@ -1131,7 +1127,7 @@ const swaggerDefinition = {
                             type: 'object',
                             properties: {
                                 name: {
-                                    type: 'string',
+                                    type:'string',
                                     description: 'The name of the tag',
                                 },
                             },
@@ -1147,7 +1143,7 @@ const swaggerDefinition = {
                                     type: 'object',
                                     properties: {
                                         message: {
-                                            type: 'string',
+                                            type:'string',
                                             example: 'Tag added successfully',
                                         },
                                         tag: {
@@ -1166,7 +1162,7 @@ const swaggerDefinition = {
                                     type: 'object',
                                     properties: {
                                         error: {
-                                            type: 'string',
+                                            type:'string',
                                             example: 'No token provided',
                                         }
                                     },
@@ -1182,7 +1178,7 @@ const swaggerDefinition = {
                                     type: 'object',
                                     properties: {
                                         error: {
-                                            type: 'string',
+                                            type:'string',
                                             example: 'Error adding tag',
                                         }
                                     },
@@ -1205,47 +1201,47 @@ const swaggerDefinition = {
         Task: {
             type: "object",
             properties: {
-                id: {
-                    type: "string",
-                    format: "uuid"
+                id: { 
+                    type: "string", 
+                    format: "uuid" 
                 },
-                title: {
-                    type: "string"
+                title: { 
+                    type: "string" 
                 },
-                description: {
-                    type: "string"
+                description: { 
+                    type: "string" 
                 },
-                status: {
-                    type: "string",
-                    enum: ["Pending", "In Progress", "Completed"]
+                status: { 
+                    type: "string", 
+                    enum: ["Pending", "In Progress", "Completed"] 
                 },
-                createdById: {
-                    type: "string",
+                createdById: { 
+                    type: "string", 
                     format: "uuid",
                     description: "References the User who created the task",
                 },
-                assignedToId: {
-                    type: "string",
-                    format: "uuid",
+                assignedToId: { 
+                    type: "string", 
+                    format: "uuid", 
                     nullable: true,
                     description: "References the User assigned to the task",
                 },
-                dueDate: {
-                    type: "string",
-                    format: "date-time",
-                    nullable: true
+                dueDate: { 
+                    type: "string", 
+                    format: "date-time", 
+                    nullable: true 
                 },
-                createdAt: {
-                    type: "string",
-                    format: "date-time"
+                createdAt: { 
+                    type: "string", 
+                    format: "date-time" 
                 },
-                updatedAt: {
-                    type: "string",
-                    format: "date-time"
+                updatedAt: { 
+                    type: "string", 
+                    format: "date-time" 
                 },
-                tagId: {
-                    type: "string",
-                    format: "uuid",
+                tagId: { 
+                    type: "string", 
+                    format: "uuid", 
                     nullable: true,
                     description: "References the Tag associated with the task",
                 },
@@ -1254,35 +1250,35 @@ const swaggerDefinition = {
         User: {
             type: "object",
             properties: {
-                id: {
-                    type: "string",
-                    format: "uuid"
+                id: { 
+                    type: "string", 
+                    format: "uuid" 
                 },
-                firstName: {
-                    type: "string"
+                firstName: { 
+                    type: "string" 
                 },
-                lastName: {
-                    type: "string"
+                lastName: { 
+                    type: "string" 
                 },
-                email: {
-                    type: "string"
+                email: { 
+                    type: "string" 
                 },
-                role: {
-                    type: "string",
-                    enum: ["Admin", "Regular"]
+                role: { 
+                    type: "string", 
+                    enum: ["Admin", "Regular"] 
                 },
-                createdAt: {
-                    type: "string",
-                    format: "date-time"
+                createdAt: { 
+                    type: "string", 
+                    format: "date-time" 
                 },
-                updatedAt: {
-                    type: "string",
-                    format: "date-time"
+                updatedAt: { 
+                    type: "string", 
+                    format: "date-time" 
                 },
-                deletedAt: {
-                    type: "string",
-                    format: "date-time",
-                    nullable: true
+                deletedAt: { 
+                    type: "string", 
+                    format: "date-time", 
+                    nullable: true 
                 },
             },
             required: ["id", "firstName", "lastName", "email", "role", "createdAt", "updatedAt"],
@@ -1290,65 +1286,68 @@ const swaggerDefinition = {
         Tag: {
             type: "object",
             properties: {
-                id: {
-                    type: "string",
-                    format: "uuid"
+                id: { 
+                    type: "string", 
+                    format: "uuid" 
                 },
-                content: {
-                    type: "string"
+                content: { 
+                    type: "string" 
                 },
-                taskId: {
-                    type: "string",
+                taskId: { 
+                    type: "string", 
                     format: "uuid",
                     description: "References the Task associated with this tag",
                 },
-                createdAt: {
-                    type: "string",
-                    format: "date-time"
+                createdAt: { 
+                    type: "string", 
+                    format: "date-time" 
                 },
-                updatedAt: {
-                    type: "string",
-                    format: "date-time"
+                updatedAt: { 
+                    type: "string", 
+                    format: "date-time" 
                 },
             },
             required: ["id", "content", "taskId", "createdAt", "updatedAt"],
         },
-        Comment: {
+        Comment: { 
             type: "object",
             properties: {
-                id: {
-                    type: "string",
-                    format: "uuid"
+                id: { 
+                    type: "string", 
+                    format: "uuid" 
                 },
-                content: {
-                    type: "string"
+                content: { 
+                    type: "string" 
                 },
-                userId: {
-                    type: "string",
+                userId: { 
+                    type: "string", 
                     format: "uuid",
                     description: "References the User who created the comment",
                 },
-                taskId: {
-                    type: "string",
+                taskId: { 
+                    type: "string", 
                     format: "uuid",
                     description: "References the Task associated with this comment",
                 },
-                createdAt: {
-                    type: "string",
-                    format: "date-time"
+                createdAt: { 
+                    type: "string", 
+                    format: "date-time" 
                 },
-                updatedAt: {
-                    type: "string",
-                    format: "date-time"
+                updatedAt: { 
+                    type: "string", 
+                    format: "date-time" 
                 },
             },
             required: ["id", "content", "userId", "taskId", "createdAt", "updatedAt"],
         },
     },
-};
+}
+
 const options = {
     swaggerDefinition,
     apis: ["src/routes/*.ts"],
 };
-const swaggerSpec = (0, swagger_jsdoc_1.default)(options);
-exports.default = swaggerSpec;
+
+const swaggerSpec = swaggerJSDoc(options);
+
+export default swaggerSpec;

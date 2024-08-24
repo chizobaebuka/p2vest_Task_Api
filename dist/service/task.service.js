@@ -51,7 +51,7 @@ class TaskService {
             throw new Error('Assigned user does not exist');
         }
         // Update task details
-        task.assignedToId = assignedToId;
+        task.assignedToId = assignedUser.id;
         task.status = 'In Progress';
         // Create a notification
         const message = `You have been assigned a new task: ${task.title}`;
@@ -211,6 +211,88 @@ class TaskService {
             console.error('Error caching new data:', error);
         }
         return tasks;
+    }
+    async deleteTaskById(taskId) {
+        const cacheKey = `task:${taskId}`;
+        console.log(`Deleting task by id: ${taskId}`);
+        try {
+            // Attempt to retrieve cached data
+            const cachedData = await (0, redis_client_1.getCachedData)(cacheKey);
+            if (cachedData) {
+                console.log('Cache hit: Returning cached data');
+                return JSON.parse(cachedData);
+            }
+            console.log('Cache miss: Fetching data from repository');
+        }
+        catch (error) {
+            console.error('Error retrieving cached data:', error);
+        }
+        // Fetch task from repository
+        let task;
+        try {
+            task = await this.taskRepo.findById(taskId);
+            if (!task) {
+                console.log('Task not found in repository');
+                return false;
+            }
+            console.log('Fetched data from repository:', task);
+        }
+        catch (error) {
+            console.error('Error fetching data from repository:', error);
+            throw new Error('Failed to fetch task from repository');
+        }
+        // Delete the task
+        try {
+            const result = await this.taskRepo.deleteTaskById(taskId);
+            if (result) {
+                console.log(`Task deleted: ${taskId}`);
+                await (0, redis_client_1.cacheData)(cacheKey, JSON.stringify(task));
+                console.log(`Deleted task cache with key: ${cacheKey}`);
+            }
+            return result;
+        }
+        catch (error) {
+            console.error('Error deleting task:', error);
+            throw new Error('Failed to delete task');
+        }
+    }
+    async getTaskById(taskId) {
+        const cacheKey = `task:${taskId}`;
+        console.log(`Fetching task by id: ${taskId}`);
+        try {
+            const cachedData = await (0, redis_client_1.getCachedData)(cacheKey);
+            if (cachedData) {
+                console.log('Cache hit: Returning cached data');
+                return JSON.parse(cachedData);
+            }
+            console.log('Cache miss: Fetching data from repository');
+        }
+        catch (error) {
+            console.error('Error retrieving cached data:', error);
+        }
+        // Fetch task from repository
+        let task;
+        try {
+            task = await this.taskRepo.findById(taskId);
+            if (!task) {
+                console.log('Task not found in repository');
+                return null;
+            }
+            console.log('Fetched data from repository:', task);
+        }
+        catch (error) {
+            console.error('Error fetching data from repository:', error);
+            throw new Error('Failed to fetch task from repository');
+        }
+        // Cache the fetched data
+        try {
+            await (0, redis_client_1.cacheData)(cacheKey, JSON.stringify(task));
+            console.log('Cached new data with key:', cacheKey);
+        }
+        catch (error) {
+            console.error('Error caching new data:', error);
+        }
+        return task;
     }
 }
 exports.TaskService = TaskService;

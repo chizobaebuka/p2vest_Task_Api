@@ -3,6 +3,7 @@ import { FindOptions, WhereOptions } from 'sequelize';
 import TagModel from '../db/models/tagmodel';
 import TaskModel from '../db/models/taskmodel';
 import { GetTaskFilter, TaskAttributes } from '../interfaces/task.interface';
+import UserModel from '../db/models/usermodel';
 
 export class TaskRepository {
     public async createTask(taskData: TaskAttributes): Promise<TaskModel> {
@@ -31,7 +32,7 @@ export class TaskRepository {
             sortOrder = 'ASC', 
             status, 
             dueDate,
-            tagId 
+            tagId,
         } = filters;
     
         const offset = (page - 1) * limit;
@@ -56,6 +57,16 @@ export class TaskRepository {
             limit,
             offset,
             order: [[String(sortBy), String(sortOrder)]],
+            include: [
+                {
+                    model: TagModel,
+                    as: 'tags',
+                },
+                {
+                    model: UserModel,
+                    as: 'users'
+                }
+            ],
         };
     
         const tasks = await TaskModel.findAll(options);
@@ -67,6 +78,10 @@ export class TaskRepository {
             limit,
             data: tasks,
         };
+    }
+
+    async deleteTaskById(taskId: string): Promise<number> {
+        return await TaskModel.destroy({ where: { id: taskId } });
     }
     
 }

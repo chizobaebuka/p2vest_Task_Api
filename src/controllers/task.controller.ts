@@ -121,9 +121,30 @@ export class TaskController {
             const tasks = await this.taskService.getAllTasksWithFilters(filters);
             return res.status(200).json({ tasks });
         } catch (error) {
-            
+            return res.status(500).json({ error: 'Error fetching tasks' });
         }
     }
-    
-    
+
+    async deleteTask(req: RequestExt, res: Response) {
+        try {
+            const { taskId } = taskIdParamSchema.parse(req.params);
+            await this.taskService.deleteTaskById(taskId);
+            return res.status(204).json({ message: 'Task deleted successfully' });
+        } catch (error) {
+            return res.status(500).json({ error: 'Error deleting task' });
+        }
+    }
+
+    async getTaskById(req: RequestExt, res: Response) {
+        try {
+            const { taskId } = taskIdParamSchema.parse(req.params);
+            const task = await this.taskService.getTaskById(taskId);
+            if (!task) {
+                return res.status(404).json({ message: 'Task not found' });
+            }
+            return res.status(200).json({ task });
+        } catch (error) {
+            return res.status(500).json({ error: 'Error fetching task' });
+        }
+    }
 }
