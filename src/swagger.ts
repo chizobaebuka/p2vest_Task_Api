@@ -758,6 +758,84 @@ const swaggerDefinition = {
                 },
             }
         },
+        '/api/task/get-task/{taskId}': {
+            get: {
+                summary: 'Get a task by ID',
+                description: 'Get a task by its ID',
+                tags: ['Tasks'],
+                parameters: [
+                    {
+                        in: 'path',
+                        name: 'taskId',
+                        description: 'The ID of the task',
+                        schema: {
+                            type: 'string',
+                        },
+                    }
+                ],
+                security: [{ JWTAuth: [] }],
+                responses: {
+                    200: {
+                        description: 'Task fetched successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    $ref: '#/definitions/Task',
+                                },
+                            },
+                        },
+                    },
+                    401: {
+                        description: 'Unauthorized',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        error: {
+                                            type: 'string',
+                                            example: 'No token provided',
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    404: {
+                        description: 'Task not found',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        error: {
+                                            type: 'string',
+                                            example: 'Task not found',
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    500: {
+                        description: 'Internal Server Error',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        error: {
+                                            type: 'string',
+                                            example: 'Error fetching task',
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                },
+            },
+        },
         '/api/comment/add-comment/{taskId}': {
             post: {
                 summary: 'Add Comment to Task',

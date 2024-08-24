@@ -6,7 +6,7 @@ import UserModel from '../db/models/usermodel';
 import { TagRepository } from '../repository/tag.repository';
 import TagModel from '../db/models/tagmodel';
 import { NotificationService } from './notification.service';
-import { cacheData, getCachedData } from '../db/redis.client';
+import { cacheData, deleteCachedData, getCachedData } from '../db/redis.client';
 import { io } from '../server';
 export class TaskService {
     private taskRepo: TaskRepository;
@@ -119,7 +119,6 @@ export class TaskService {
         return JSON.parse(cachedStatus) as TaskModel; 
     }
 
-
     async addTagsToTask(taskId: string, tagIds: string[]) {
         // Fetch the task to ensure it exists
         const task = await TaskModel.findOne({
@@ -207,7 +206,6 @@ export class TaskService {
         return result.data;
     }
 
-
     async getAllTasks(): Promise<TaskModel[]> {
         const cacheKey = 'tasks:all';
         console.log(`Fetching all tasks`);
@@ -251,45 +249,37 @@ export class TaskService {
         return tasks;
     }
 
-    async deleteTaskById(taskId: string) {
+    async deleteTaskById(taskId: string): Promise<boolean> {
         const cacheKey = `task:${taskId}`;
+        const allTasksCacheKey = 'tasks:all';
         console.log(`Deleting task by id: ${taskId}`);
     
         try {
-            // Attempt to retrieve cached data
-            const cachedData = await getCachedData(cacheKey);
-            if (cachedData) {
-                console.log('Cache hit: Returning cached data');
-                return JSON.parse(cachedData) as TaskModel[];
-            }
-            console.log('Cache miss: Fetching data from repository');
-        } catch (error) {
-            console.error('Error retrieving cached data:', error);
-        }
-    
-        // Fetch task from repository
-        let task: TaskModel | null;
-        try {
-            task = await this.taskRepo.findById(taskId);
+            // Fetch task from repository
+            const task = await this.taskRepo.findById(taskId);
             if (!task) {
                 console.log('Task not found in repository');
                 return false;
             }
-            console.log('Fetched data from repository:', task);
-        } catch (error) {
-            console.error('Error fetching data from repository:', error);
-            throw new Error('Failed to fetch task from repository');
-        }
     
-        // Delete the task
-        try {
+            // Delete the task
             const result = await this.taskRepo.deleteTaskById(taskId);
-            if (result) {
+            if (result > 0) { // Check if at least one row was affected
                 console.log(`Task deleted: ${taskId}`);
-                await cacheData(cacheKey, JSON.stringify(task));
-                console.log(`Deleted task cache with key: ${cacheKey}`);
+    
+                // Invalidate the cache for this task
+                await deleteCachedData(cacheKey);
+    
+                // Refresh the cache for all tasks
+                const allTasks = await this.taskRepo.getAllTasks();
+                await cacheData(allTasksCacheKey, JSON.stringify(allTasks));
+                console.log('Updated cache for all tasks after deletion.');
+    
+                return true;
+            } else {
+                console.log('No task was deleted');
+                return false;
             }
-            return result;
         } catch (error) {
             console.error('Error deleting task:', error);
             throw new Error('Failed to delete task');

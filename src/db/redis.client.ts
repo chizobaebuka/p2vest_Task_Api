@@ -67,4 +67,23 @@ const getCachedData = async (key: string): Promise<string | null> => {
     }
 };
 
-export { client, connectClient, closeClient, cacheData, getCachedData };
+const deleteCachedData = async (key: string): Promise<boolean> => {
+    try {
+        console.log(`Attempting to delete cached data for key: ${key}`);
+        const result = await client.del(key);
+        
+        if (result === 1) {
+            console.log(`Cache entry deleted for key: ${key}`);
+            return true;
+        } else {
+            console.log(`No cache entry found for key: ${key}`);
+            return false;
+        }
+    } catch (error) {
+        console.error('Error deleting cached data:', error);
+        return false;
+    }
+};
+
+
+export { client, connectClient, closeClient, cacheData, getCachedData, deleteCachedData };

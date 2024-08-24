@@ -23,6 +23,6 @@ router.post('/:taskId/add-tags', authenticate, authorize(['Regular']), taskContr
 router.get('/all-tasks', authenticate, authorize(['Admin']), taskController.getAllTasks.bind(taskController));
 router.get('/filtered-tasks', authenticate, authorize(['Admin', 'Regular']), taskController.getAllTasksWithFilters.bind(taskController));
 router.delete('/:taskId', authenticate, authorize(['Admin', 'Regular']), taskController.deleteTask.bind(taskController));
-router.get('/:taskId', authenticate, taskController.getTaskById.bind(taskController));
+router.get('/get-task/:taskId', authenticate, taskController.getTaskById.bind(taskController));
 
 export default router;

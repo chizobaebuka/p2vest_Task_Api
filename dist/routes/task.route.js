@@ -23,5 +23,5 @@ router.post('/:taskId/add-tags', auth_middleware_1.authenticate, (0, auth_middle
 router.get('/all-tasks', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Admin']), taskController.getAllTasks.bind(taskController));
 router.get('/filtered-tasks', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Admin', 'Regular']), taskController.getAllTasksWithFilters.bind(taskController));
 router.delete('/:taskId', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Admin', 'Regular']), taskController.deleteTask.bind(taskController));
-router.get('/:taskId', auth_middleware_1.authenticate, taskController.getTaskById.bind(taskController));
+router.get('/get-task/:taskId', auth_middleware_1.authenticate, taskController.getTaskById.bind(taskController));
 exports.default = router;

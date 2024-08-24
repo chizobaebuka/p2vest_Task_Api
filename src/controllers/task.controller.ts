@@ -128,12 +128,18 @@ export class TaskController {
     async deleteTask(req: RequestExt, res: Response) {
         try {
             const { taskId } = taskIdParamSchema.parse(req.params);
-            await this.taskService.deleteTaskById(taskId);
-            return res.status(204).json({ message: 'Task deleted successfully' });
+            
+            const result = await this.taskService.deleteTaskById(taskId);
+            if (result) {
+                return res.status(204).json({ message: 'Task deleted successfully' });
+            } else {
+                return res.status(404).json({ error: 'Task not found' });
+            }
         } catch (error) {
             return res.status(500).json({ error: 'Error deleting task' });
         }
     }
+    
 
     async getTaskById(req: RequestExt, res: Response) {
         try {

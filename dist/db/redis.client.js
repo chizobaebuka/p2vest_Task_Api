@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCachedData = exports.cacheData = exports.client = void 0;
+exports.deleteCachedData = exports.getCachedData = exports.cacheData = exports.client = void 0;
 exports.connectClient = connectClient;
 exports.closeClient = closeClient;
 const redis_1 = require("redis");
@@ -74,3 +74,22 @@ const getCachedData = async (key) => {
     }
 };
 exports.getCachedData = getCachedData;
+const deleteCachedData = async (key) => {
+    try {
+        console.log(`Attempting to delete cached data for key: ${key}`);
+        const result = await client.del(key);
+        if (result === 1) {
+            console.log(`Cache entry deleted for key: ${key}`);
+            return true;
+        }
+        else {
+            console.log(`No cache entry found for key: ${key}`);
+            return false;
+        }
+    }
+    catch (error) {
+        console.error('Error deleting cached data:', error);
+        return false;
+    }
+};
+exports.deleteCachedData = deleteCachedData;
