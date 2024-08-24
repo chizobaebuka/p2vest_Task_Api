@@ -14,7 +14,6 @@ export class TaskController {
         this.taskService = taskService;
     }
 
-    // Create a new task
     public async createTask(req: RequestExt, res: Response): Promise<Response> {
         try {
             const taskData = createTaskSchema.parse(req.body);
@@ -34,7 +33,6 @@ export class TaskController {
         }
     }
 
-    // Assign a task to a user
     public async assignTask(req: RequestExt, res: Response): Promise<Response> {
         try {
             // Validate request parameters
@@ -63,7 +61,7 @@ export class TaskController {
         try {
             const { taskId, status } = updateTaskStatusSchema.parse({
                 taskId: req.params.taskId,
-                status: req.body.status as TaskStatus // Ensure status is treated as TaskStatus
+                status: req.body.status as TaskStatus 
             });
 
             const userId = req.user?.id as string;

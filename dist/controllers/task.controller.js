@@ -7,7 +7,6 @@ class TaskController {
     constructor(taskService) {
         this.taskService = taskService;
     }
-    // Create a new task
     async createTask(req, res) {
         var _a;
         try {
@@ -26,7 +25,6 @@ class TaskController {
             return res.status(400).json({ error: 'Error creating task: ' + error.message });
         }
     }
-    // Assign a task to a user
     async assignTask(req, res) {
         try {
             // Validate request parameters
@@ -54,7 +52,7 @@ class TaskController {
         try {
             const { taskId, status } = validation_1.updateTaskStatusSchema.parse({
                 taskId: req.params.taskId,
-                status: req.body.status // Ensure status is treated as TaskStatus
+                status: req.body.status
             });
             const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
             const userRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;

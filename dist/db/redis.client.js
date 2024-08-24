@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.client = void 0;
+exports.getCachedData = exports.cacheData = exports.client = void 0;
 exports.connectClient = connectClient;
 exports.closeClient = closeClient;
 const redis_1 = require("redis");
@@ -45,3 +45,32 @@ async function closeClient() {
         }
     }
 }
+const cacheData = async (key, value) => {
+    try {
+        console.log(`Caching data with key: ${key}`);
+        await client.set(key, value);
+        console.log(`Data cached successfully`);
+    }
+    catch (error) {
+        console.error('Error caching data:', error);
+    }
+};
+exports.cacheData = cacheData;
+const getCachedData = async (key) => {
+    try {
+        console.log(`Retrieving cached data for key: ${key}`);
+        const value = await client.get(key);
+        if (value === null) {
+            console.log(`No data found for key: ${key}`);
+        }
+        else {
+            console.log(`Data retrieved for key: ${key}`);
+        }
+        return value;
+    }
+    catch (error) {
+        console.error('Error retrieving cached data:', error);
+        return null;
+    }
+};
+exports.getCachedData = getCachedData;

@@ -1,4 +1,3 @@
-// src/service/tag.service.ts
 import TagModel from "../db/models/tagmodel";
 import { TagRepository } from "../repository/tag.repository";
 

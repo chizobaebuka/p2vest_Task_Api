@@ -1,22 +1,40 @@
+// src/server.ts
 import express from 'express';
-import connection from './db/sequelize';
 import cors from 'cors';
+import connection from './db/sequelize';
 import authRouter from './routes/auth.route';
 import taskRouter from './routes/task.route';
 import commentRouter from './routes/comment.route';
 import tagRouter from './routes/tag.route';
-import { models } from './db/models';
 import { connectClient, closeClient } from './db/redis.client';
+import { Server } from 'socket.io';
+import http from 'http';
+import bodyParser from 'body-parser';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const server = http.createServer(app);
+export const io = new Server(server);
+
+// Socket.io setup
+io.on('connection', (socket) => {
+  console.log('Client connected');
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
+});
+
 // Middleware setup
-app.use(express.json()); // For parsing application/json
-app.use(cors()); // Enable CORS for cross-origin requests
-app.use('/api/auth', authRouter); // Use the auth routes
-app.use('/api/task', taskRouter); // Use the task routes
-app.use('/api/comment', commentRouter); // Use the comment routes
+app.use(express.json());
+app.use(cors());
+app.use(bodyParser.json());
+
+// Route setup
+app.use('/api/auth', authRouter);
+app.use('/api/task', taskRouter);
+app.use('/api/comment', commentRouter);
 app.use('/api/tag', tagRouter);
 
 // Error handling middleware
@@ -24,16 +42,6 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
-
-// Define routes here
-function initializeModels() {
-  // Ensure all models are associated
-  Object.keys(models).forEach((modelName) => {
-    if ('associate' in models[modelName]) {
-      models[modelName].associate(models);
-    }
-  });
-}
 
 async function testConnection() {
   try {
@@ -44,33 +52,29 @@ async function testConnection() {
   }
 }
 
-// Start the server
 async function startServer() {
   try {
-    await connection.sync(); // Sync the database
+    await connection.sync();
+    await connectClient();
 
-    // Connect to Redis
-    await connectClient(); 
-
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
-      testConnection(); // Optionally test the database connection when the server starts
+      testConnection();
     });
   } catch (error) {
     console.error('Error starting the server:', error);
   }
 }
 
-// Handle shutdown
 async function shutdown() {
   console.log('Shutting down...');
   try {
-    await closeClient(); // Close Redis connection
-    await connection.close(); // Close database connection
+    await closeClient();
+    await connection.close();
   } catch (err) {
     console.error('Error during shutdown:', err);
   }
-  process.exit(0); // Exit process
+  process.exit(0);
 }
 
 process.on('SIGINT', shutdown);

@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CommentService = void 0;
-// src/service/comment.service.ts
 const comment_repository_1 = require("../repository/comment.repository");
 class CommentService {
     constructor() {

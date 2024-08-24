@@ -1,4 +1,3 @@
-// src/service/comment.service.ts
 import { CommentRepository } from '../repository/comment.repository';
 
 export class CommentService {

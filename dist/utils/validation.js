@@ -29,7 +29,7 @@ exports.updateTaskSchema = zod_1.z.object({
 });
 exports.updateTaskStatusSchema = zod_1.z.object({
     taskId: zod_1.z.string().uuid('Invalid task ID'),
-    status: zod_1.z.nativeEnum(task_interface_1.TaskStatus), // Use nativeEnum for TaskStatus
+    status: zod_1.z.nativeEnum(task_interface_1.TaskStatus),
 });
 exports.assignTaskSchema = zod_1.z.object({
     taskId: zod_1.z.string().uuid('Invalid task ID'),
@@ -42,7 +42,7 @@ exports.addTagsToTaskSchema = zod_1.z.object({
     tagIds: zod_1.z.array(zod_1.z.string().uuid('Invalid tag ID')).min(1, 'At least one tag ID is required'),
 });
 exports.addCommentSchema = zod_1.z.object({
-    content: zod_1.z.string().min(1, 'Content is required'), // Validate that content is a non-empty string
+    content: zod_1.z.string().min(1, 'Content is required'),
 });
 exports.taskIdParamSchema = zod_1.z.object({
     taskId: zod_1.z.string().uuid('Invalid task ID'),
@@ -53,9 +53,9 @@ exports.addTagSchema = zod_1.z.object({
 exports.GetTaskFilterSchema = zod_1.z.object({
     page: zod_1.z.number().min(1).optional(),
     limit: zod_1.z.number().min(1).max(100).optional(),
-    sortBy: zod_1.z.enum(['dueDate']).optional(), // Sorting only by dueDate for simplicity
+    sortBy: zod_1.z.enum(['dueDate']).optional(),
     sortOrder: zod_1.z.enum(['ASC', 'DESC']).optional(),
     status: zod_1.z.enum(['Pending', 'In Progress', 'Completed']).optional(),
     tagId: zod_1.z.string().uuid().optional(),
-    dueDate: zod_1.z.string().transform((str) => new Date(str)).optional(), // Assuming dueDate is passed as a string
+    dueDate: zod_1.z.string().transform((str) => new Date(str)).optional(),
 });

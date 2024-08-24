@@ -4,10 +4,10 @@ import { v4 as uuidv4 } from "uuid";
 
 export class TagRepository {
     public async createTag(tagName: string): Promise<TagModel> {
-        return TagModel.create({ id: uuidv4(), name: tagName }); // Assuming TagModel.create() method
+        return TagModel.create({ id: uuidv4(), name: tagName });
     }
 
     public async getTagById(tagId: string): Promise<TagModel | null> {
-        return TagModel.findByPk(tagId); // Assuming TagModel.findByPk() method
+        return TagModel.findByPk(tagId); 
     }
 }

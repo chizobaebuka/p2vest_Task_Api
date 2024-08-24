@@ -1,4 +1,3 @@
-// src/service/comment.service.ts
 import { v4 as uuidv4 } from "uuid";
 import NotificationModel from "../db/models/notification";
 

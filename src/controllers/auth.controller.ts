@@ -2,17 +2,16 @@ import { Request, Response } from 'express';
 import { IUser, LoginData } from '../interfaces/user.interface';
 import { AuthService } from '../service/user.service';
 import { RequestExt } from '../middleware/auth.middleware';
+import { cacheData, getCachedData } from '../db/redis.client';
+import UserModel from '../db/models/usermodel';
 
 export class AuthController {
     private authService: AuthService;
 
     constructor() {
-        console.log('Instantiating AuthController');
         this.authService = new AuthService();
-        console.log('AuthService instantiated:', this.authService);
     }
 
-    // Handle user registration
     public async registerUser(req: Request, res: Response): Promise<Response> {
         try {
             const userData: Partial<IUser> = req.body;
@@ -33,14 +32,13 @@ export class AuthController {
         }
     }
 
-    // // Handle creating an admin user (protected)
-    public async createAdminUser(req: RequestExt, res: Response): Promise<Response> {
+    public async createAdminUser(req: RequestExt, res: Response): Promise<Response> {    
         try {
-            // Extract the current user's role from the request object
             const currentUserRole = req.user?.role as 'Admin' | 'Regular';
             
             // Ensure that only admins can create other admins
             if (currentUserRole !== 'Admin') {
+                console.error('Unauthorized attempt to create admin user');
                 throw new Error('Only Admins can create other Admins');
             }
 
@@ -48,16 +46,48 @@ export class AuthController {
             const newAdminUser = await this.authService.createAdminUser(userData);
             return res.status(201).json({ message: 'Admin user created successfully', user: newAdminUser });
         } catch (error: any) {
+            console.error('Error creating admin user:', error.message);
             return res.status(400).json({ error: error.message });
         }
     }
+    
 
     public async getAllUsers(req: RequestExt, res: Response): Promise<Response> {
+        const cacheKey = 'users:all';
+        console.log(`Cache key: ${cacheKey}`);
+    
+        let cachedData: string | null;
         try {
-            const users = await this.authService.getAllUsers();
-            return res.status(200).json({ users });
-        } catch (error: any) {
-            return res.status(500).json({ error: error.message });
+            cachedData = await getCachedData(cacheKey);
+            console.log(`Retrieved cache data: ${cachedData}`);
+        } catch (error) {
+            console.error('Error retrieving cached data:', error);
+            cachedData = null;
         }
+    
+        if (cachedData) {
+            console.log('Cache hit: Returning cached data');
+            return res.status(200).json({ users: JSON.parse(cachedData) });
+        }
+    
+        console.log('Cache miss: Fetching data from service');
+        
+        let users: UserModel[];
+        try {
+            users = await this.authService.getAllUsers();
+        } catch (error) {
+            console.error('Error fetching data from service:', error);
+            return res.status(500).json({ error: 'Failed to fetch users' });
+        }
+    
+        try {
+            await cacheData(cacheKey, JSON.stringify(users));
+            console.log('Cached new data with key:', cacheKey);
+        } catch (error) {
+            console.error('Error caching new data:', error);
+        }
+    
+        return res.status(200).json({ users });
     }
+    
 }

@@ -31,7 +31,7 @@ export class TaskRepository {
             sortOrder = 'ASC', 
             status, 
             dueDate,
-            tagId // Include tagId in filters
+            tagId 
         } = filters;
     
         const offset = (page - 1) * limit;
@@ -48,10 +48,9 @@ export class TaskRepository {
         }
     
         if (tagId) {
-            whereOptions.tagId = tagId; // Filter by tagId if provided
+            whereOptions.tagId = tagId; 
         }
     
-        // Define the find options, including pagination and sorting
         const options: FindOptions = {
             where: whereOptions,
             limit,
@@ -59,10 +58,7 @@ export class TaskRepository {
             order: [[String(sortBy), String(sortOrder)]],
         };
     
-        // Fetch tasks that match the filter criteria
         const tasks = await TaskModel.findAll(options);
-    
-        // Get the total count of tasks that match the filter criteria
         const total = await TaskModel.count({ where: whereOptions });
     
         return {

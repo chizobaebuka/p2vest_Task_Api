@@ -9,10 +9,10 @@ const tagmodel_1 = __importDefault(require("../db/models/tagmodel"));
 const uuid_1 = require("uuid");
 class TagRepository {
     async createTag(tagName) {
-        return tagmodel_1.default.create({ id: (0, uuid_1.v4)(), name: tagName }); // Assuming TagModel.create() method
+        return tagmodel_1.default.create({ id: (0, uuid_1.v4)(), name: tagName });
     }
     async getTagById(tagId) {
-        return tagmodel_1.default.findByPk(tagId); // Assuming TagModel.findByPk() method
+        return tagmodel_1.default.findByPk(tagId);
     }
 }
 exports.TagRepository = TagRepository;

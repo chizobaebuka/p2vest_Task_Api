@@ -32,7 +32,7 @@ export const updateTaskSchema = z.object({
 
 export const updateTaskStatusSchema = z.object({
     taskId: z.string().uuid('Invalid task ID'),
-    status: z.nativeEnum(TaskStatus), // Use nativeEnum for TaskStatus
+    status: z.nativeEnum(TaskStatus), 
 });
 
 export const assignTaskSchema = z.object({
@@ -50,7 +50,7 @@ export const addTagsToTaskSchema = z.object({
 
 
 export const addCommentSchema = z.object({
-    content: z.string().min(1, 'Content is required'),  // Validate that content is a non-empty string
+    content: z.string().min(1, 'Content is required'),  
 });
 
 export const taskIdParamSchema = z.object({
@@ -64,9 +64,9 @@ export const addTagSchema = z.object({
 export const GetTaskFilterSchema = z.object({
     page: z.number().min(1).optional(),
     limit: z.number().min(1).max(100).optional(),
-    sortBy: z.enum(['dueDate']).optional(), // Sorting only by dueDate for simplicity
+    sortBy: z.enum(['dueDate']).optional(), 
     sortOrder: z.enum(['ASC', 'DESC']).optional(),
     status: z.enum(['Pending', 'In Progress', 'Completed']).optional(),
     tagId: z.string().uuid().optional(),
-    dueDate: z.string().transform((str) => new Date(str)).optional(), // Assuming dueDate is passed as a string
+    dueDate: z.string().transform((str) => new Date(str)).optional(), 
 });
