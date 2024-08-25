@@ -12,12 +12,8 @@ To get your copy of the project running locally on your system, follow the steps
 2. npm install 
 3. npx tsc to compile the project
 3. create a db in your local postgres database and suit your configuration according to the .env.sample file
-4. run the following migrations below
-    - run npx sequelize-cli db:migrate:undo:all
-    - run npx sequelize-cli db:migrate:status
-    - run npx sequelize-cli db:migrate
-5. Start the server using npm run dev
-6. Start testing the api using your local swagger url
+4. Start the server using npm run dev
+5. Start testing the api using your local swagger url
 http://localhost:3030/api-docs/#
 
 
