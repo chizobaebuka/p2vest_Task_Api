@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node-dev -r tsconfig-paths/register src/server.ts",
+    "dev": "npx tsc && ts-node-dev -r tsconfig-paths/register src/server.ts",
     "migrate": "npx sequelize-cli db:migrate",
     "seed": "npx sequelize-cli db:seed:all",
     "migration:generate": "npx sequelize-cli migration:generate --name",
