@@ -1,9 +1,13 @@
 import { v4 as uuidv4 } from "uuid";
+import { Transaction } from "sequelize";
 import NotificationModel from "../db/models/notification";
 
 export class NotificationService {
-    static createNotification(userId: any, taskId: string, type: string, message: string) {
-        return NotificationModel.create({ id: uuidv4(), userId, taskId, type, message, isRead: false });
+    static createNotification(userId: any, taskId: string, type: string, message: string, transaction?: Transaction) {
+        return NotificationModel.create(
+            { id: uuidv4(), userId, taskId, type, message, isRead: false },
+            transaction ? { transaction } : undefined,
+        );
     }
 
     public async getNotifications(userId: string) {

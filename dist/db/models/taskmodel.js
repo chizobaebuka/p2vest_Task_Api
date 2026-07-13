@@ -61,14 +61,6 @@ TaskModel.init({
         type: sequelize_1.DataTypes.DATE,
         allowNull: true, // Due date is optional
     },
-    tagId: {
-        type: sequelize_1.DataTypes.UUID,
-        allowNull: true,
-        references: {
-            model: 'tagsTable',
-            key: 'id',
-        }
-    },
     createdAt: {
         type: sequelize_1.DataTypes.DATE,
         allowNull: false,

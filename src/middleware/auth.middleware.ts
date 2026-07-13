@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verify } from 'jsonwebtoken';
 import UserModel from '../db/models/usermodel';
+import { getJwtSecret } from '../utils/helper';
 
 interface JwtPayload {
     id: string;
@@ -30,8 +31,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     }
 
     try {
-        const secret = process.env.JWT_SECRET || 'your_jwt_secret';
-        const decoded = verify(token, secret) as JwtPayload;
+        const decoded = verify(token, getJwtSecret()) as JwtPayload;
 
         // Fetch user from database
         const user = await UserModel.findByPk(decoded.id);

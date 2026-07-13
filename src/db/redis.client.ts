@@ -41,10 +41,14 @@ async function closeClient() {
     }
 }
 
-const cacheData = async (key: string, value: string): Promise<void> => {
+const DEFAULT_CACHE_TTL_SECONDS = process.env.REDIS_TTL_SECONDS
+    ? parseInt(process.env.REDIS_TTL_SECONDS, 10)
+    : 300;
+
+const cacheData = async (key: string, value: string, ttlSeconds: number = DEFAULT_CACHE_TTL_SECONDS): Promise<void> => {
     try {
         console.log(`Caching data with key: ${key}`);
-        await client.set(key, value);
+        await client.set(key, value, { EX: ttlSeconds });
         console.log(`Data cached successfully`);
     } catch (error) {
         console.error('Error caching data:', error);

@@ -1313,15 +1313,17 @@ const swaggerDefinition = {
                     type: "string", 
                     format: "date-time" 
                 },
-                updatedAt: { 
-                    type: "string", 
-                    format: "date-time" 
+                updatedAt: {
+                    type: "string",
+                    format: "date-time"
                 },
-                tagId: { 
-                    type: "string", 
-                    format: "uuid", 
-                    nullable: true,
-                    description: "References the Tag associated with the task",
+                tags: {
+                    type: "array",
+                    description: "Tags associated with the task (many-to-many)",
+                    items: {
+                        type: "string",
+                        format: "uuid",
+                    },
                 },
             },
         },

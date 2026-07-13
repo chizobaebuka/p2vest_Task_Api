@@ -18,6 +18,10 @@ const socket_io_1 = require("socket.io");
 const http_1 = __importDefault(require("http"));
 const swagger_1 = __importDefault(require("./swagger"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const helper_1 = require("./utils/helper");
+// Fail fast on boot if JWT_SECRET is missing rather than letting auth
+// silently fall back to a hardcoded default the first time a token is verified.
+(0, helper_1.getJwtSecret)();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
 const server = http_1.default.createServer(app);
@@ -52,30 +56,35 @@ app.use('/api/tag', tag_route_1.default);
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).send('Something broke!');
+    res.status(500).json({ error: 'Something broke!' });
 });
 // Swagger setup
 app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.default));
-async function testConnection() {
-    try {
-        await sequelize_1.default.authenticate();
-        console.log('Database connection has been established successfully.');
-    }
-    catch (error) {
-        console.error('Unable to connect to the database:', error);
-    }
-}
+process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled promise rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught exception, shutting down:', err);
+    process.exit(1);
+});
 async function startServer() {
     try {
-        await sequelize_1.default.sync();
+        // Schema is managed exclusively via `npm run migrate` (sequelize-cli).
+        // We intentionally do NOT call connection.sync() here: running sync()
+        // alongside migrations on every boot is redundant, and on a horizontally
+        // scaled deployment (multiple instances booting concurrently/rolling
+        // deploy) concurrent DDL from sync() can race against migrations and
+        // against each other.
+        await sequelize_1.default.authenticate();
+        console.log('Database connection has been established successfully.');
         await (0, redis_client_1.connectClient)();
         server.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);
-            testConnection();
         });
     }
     catch (error) {
         console.error('Error starting the server:', error);
+        process.exit(1);
     }
 }
 async function shutdown() {

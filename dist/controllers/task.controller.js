@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TaskController = void 0;
 const validation_1 = require("../utils/validation");
 const zod_1 = require("zod");
+const helper_1 = require("../utils/helper");
 class TaskController {
     constructor(taskService) {
         this.taskService = taskService;
@@ -22,29 +23,28 @@ class TaskController {
             if (error instanceof zod_1.z.ZodError) {
                 return res.status(400).json({ error: 'Validation error', details: error.errors });
             }
-            return res.status(400).json({ error: 'Error creating task: ' + error.message });
+            return res.status((0, helper_1.mapErrorToStatus)(error)).json({ error: 'Error creating task: ' + error.message });
         }
     }
     async assignTask(req, res) {
+        var _a, _b;
         try {
             // Validate request parameters
             const { taskId, assignedToId } = validation_1.assignTaskSchema.parse({
                 taskId: req.params.taskId,
                 assignedToId: req.params.assignedToId,
             });
-            // Ensure the assignedToId is valid and associated with a user
-            if (!assignedToId) {
-                return res.status(400).json({ error: 'Assigned user ID is required' });
-            }
+            const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+            const userRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
             // Call service method to assign task
-            const updatedTask = await this.taskService.assignTask(taskId, assignedToId);
+            const updatedTask = await this.taskService.assignTask(taskId, assignedToId, userId, userRole);
             return res.status(200).json({ message: 'Task assigned successfully', task: updatedTask });
         }
         catch (error) {
             if (error instanceof zod_1.z.ZodError) {
                 return res.status(400).json({ error: 'Validation error', details: error.errors });
             }
-            return res.status(400).json({ error: 'Error assigning task: ' + error.message });
+            return res.status((0, helper_1.mapErrorToStatus)(error)).json({ error: 'Error assigning task: ' + error.message });
         }
     }
     async updateTaskStatus(req, res) {
@@ -63,7 +63,7 @@ class TaskController {
             if (error instanceof zod_1.z.ZodError) {
                 return res.status(400).json({ error: 'Validation error', details: error.errors });
             }
-            return res.status(400).json({ error: 'Error updating task status: ' + error.message });
+            return res.status((0, helper_1.mapErrorToStatus)(error)).json({ error: 'Error updating task status: ' + error.message });
         }
     }
     async addTagsToTask(req, res) {
@@ -71,16 +71,13 @@ class TaskController {
             const { tagIds } = validation_1.addTagsToTaskSchema.parse(req.body);
             const { taskId } = validation_1.taskIdParamSchema.parse(req.params);
             const task = await this.taskService.addTagsToTask(taskId, tagIds);
-            if (!task) {
-                return res.status(404).json({ message: 'Task or Tags not found' });
-            }
             return res.status(200).json({ message: 'Tags added to task successfully', task });
         }
         catch (error) {
             if (error instanceof zod_1.z.ZodError) {
                 return res.status(400).json({ error: 'Validation error', details: error.errors });
             }
-            return res.status(500).json({ message: 'Failed to add tags to task', error: error.message });
+            return res.status((0, helper_1.mapErrorToStatus)(error)).json({ message: 'Failed to add tags to task', error: error.message });
         }
     }
     async getAllTasks(req, res) {
@@ -123,6 +120,9 @@ class TaskController {
             }
         }
         catch (error) {
+            if (error instanceof zod_1.z.ZodError) {
+                return res.status(400).json({ error: 'Validation error', details: error.errors });
+            }
             return res.status(500).json({ error: 'Error deleting task' });
         }
     }
@@ -136,6 +136,9 @@ class TaskController {
             return res.status(200).json({ task });
         }
         catch (error) {
+            if (error instanceof zod_1.z.ZodError) {
+                return res.status(400).json({ error: 'Validation error', details: error.errors });
+            }
             return res.status(500).json({ error: 'Error fetching task' });
         }
     }

@@ -16,9 +16,9 @@ const taskController = new TaskController(taskService);
    *   description: API endpoints to manage task
 */
 router.post('/tasks', authenticate, authorize(['Admin', 'Regular']), taskController.createTask.bind(taskController))
-router.put('/:taskId/assign/:assignedToId', authenticate, taskController.assignTask.bind(taskController));
+router.put('/:taskId/assign/:assignedToId', authenticate, authorize(['Admin', 'Regular']), taskController.assignTask.bind(taskController));
 router.put('/:taskId/status', authenticate, authorize(['Admin', 'Regular']), taskController.updateTaskStatus.bind(taskController))
-router.post('/:taskId/add-tags', authenticate, authorize(['Regular']), taskController.addTagsToTask.bind(taskController));
+router.post('/:taskId/add-tags', authenticate, authorize(['Admin', 'Regular']), taskController.addTagsToTask.bind(taskController));
 router.get('/all-tasks', authenticate, authorize(['Admin']), taskController.getAllTasks.bind(taskController));
 router.get('/filtered-tasks', authenticate, authorize(['Admin', 'Regular']), taskController.getAllTasksWithFilters.bind(taskController));
 router.delete('/:taskId', authenticate, authorize(['Admin', 'Regular']), taskController.deleteTask.bind(taskController));

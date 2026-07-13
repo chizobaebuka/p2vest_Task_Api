@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.asyncMiddleware = exports.authorize = exports.authenticate = void 0;
 const jsonwebtoken_1 = require("jsonwebtoken");
 const usermodel_1 = __importDefault(require("../db/models/usermodel"));
+const helper_1 = require("../utils/helper");
 const authenticate = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -16,8 +17,7 @@ const authenticate = async (req, res, next) => {
         return res.status(401).json({ error: 'Token is invalid' });
     }
     try {
-        const secret = process.env.JWT_SECRET || 'your_jwt_secret';
-        const decoded = (0, jsonwebtoken_1.verify)(token, secret);
+        const decoded = (0, jsonwebtoken_1.verify)(token, (0, helper_1.getJwtSecret)());
         // Fetch user from database
         const user = await usermodel_1.default.findByPk(decoded.id);
         if (!user) {

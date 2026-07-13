@@ -13,6 +13,11 @@ import http from 'http';
 import bodyParser from 'body-parser';
 import swaggerSpec from './swagger';
 import swaggerUi from 'swagger-ui-express';
+import { getJwtSecret } from './utils/helper';
+
+// Fail fast on boot if JWT_SECRET is missing rather than letting auth
+// silently fall back to a hardcoded default the first time a token is verified.
+getJwtSecret();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -59,32 +64,39 @@ app.use('/api/tag', tagRouter);
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
-  res.status(500).send('Something broke!');
+  res.status(500).json({ error: 'Something broke!' });
 });
 
 // Swagger setup
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-async function testConnection() {
-  try {
-    await connection.authenticate();
-    console.log('Database connection has been established successfully.');
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-  }
-}
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception, shutting down:', err);
+  process.exit(1);
+});
 
 async function startServer() {
   try {
-    await connection.sync();
+    // Schema is managed exclusively via `npm run migrate` (sequelize-cli).
+    // We intentionally do NOT call connection.sync() here: running sync()
+    // alongside migrations on every boot is redundant, and on a horizontally
+    // scaled deployment (multiple instances booting concurrently/rolling
+    // deploy) concurrent DDL from sync() can race against migrations and
+    // against each other.
+    await connection.authenticate();
+    console.log('Database connection has been established successfully.');
     await connectClient();
 
     server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
-      testConnection();
     });
   } catch (error) {
     console.error('Error starting the server:', error);
+    process.exit(1);
   }
 }
 

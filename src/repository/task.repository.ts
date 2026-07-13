@@ -1,5 +1,5 @@
 // src/repository/task.repository.ts
-import { FindOptions, WhereOptions } from 'sequelize';
+import { FindOptions, Transaction, WhereOptions } from 'sequelize';
 import TagModel from '../db/models/tagmodel';
 import TaskModel from '../db/models/taskmodel';
 import { GetTaskFilter, TaskAttributes } from '../interfaces/task.interface';
@@ -14,9 +14,19 @@ export class TaskRepository {
         return await TaskModel.findByPk(taskId);
     }
 
-    public async addTagsToTask(task: TaskModel, tags: TagModel[]): Promise<void> {
+    // Reads the row with a FOR UPDATE lock inside the given transaction, so
+    // concurrent assign/status-update requests for the same task serialize
+    // instead of racing on a read-modify-write cycle (lost-update prevention).
+    public async findByIdForUpdate(taskId: string, transaction: Transaction): Promise<TaskModel | null> {
+        return await TaskModel.findByPk(taskId, {
+            transaction,
+            lock: transaction.LOCK.UPDATE,
+        });
+    }
+
+    public async addTagsToTask(task: TaskModel, tags: TagModel[], transaction?: Transaction): Promise<void> {
         for (const tag of tags) {
-            await task.addTags(tag);
+            await task.addTags(tag, transaction ? { transaction } : undefined);
         }
     }
 
@@ -36,41 +46,38 @@ export class TaskRepository {
         } = filters;
     
         const offset = (page - 1) * limit;
-    
+
         // Build the where options based on the provided filters
         const whereOptions: WhereOptions = {};
-    
+
         if (status) {
             whereOptions.status = status;
         }
-    
+
         if (dueDate) {
             whereOptions.dueDate = dueDate;
         }
-    
-        if (tagId) {
-            whereOptions.tagId = tagId; 
-        }
-    
+
+        // tagId is no longer a column on tasksTable (tags are many-to-many via
+        // TaskTags), so filtering by tag is expressed as a join condition.
+        const tagsInclude = tagId
+            ? { model: TagModel, as: 'tags' as const, where: { id: tagId }, required: true }
+            : { model: TagModel, as: 'tags' as const };
+
         const options: FindOptions = {
             where: whereOptions,
             limit,
             offset,
             order: [[String(sortBy), String(sortOrder)]],
             include: [
-                {
-                    model: TagModel,
-                    as: 'tags',
-                },
-                {
-                    model: UserModel,
-                    as: 'users'
-                }
+                tagsInclude,
+                { model: UserModel, as: 'creator' },
+                { model: UserModel, as: 'assignee' },
             ],
         };
-    
+
         const tasks = await TaskModel.findAll(options);
-        const total = await TaskModel.count({ where: whereOptions });
+        const total = await TaskModel.count({ where: whereOptions, include: tagId ? [tagsInclude] : [] });
     
         return {
             total,

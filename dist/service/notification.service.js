@@ -7,8 +7,8 @@ exports.NotificationService = void 0;
 const uuid_1 = require("uuid");
 const notification_1 = __importDefault(require("../db/models/notification"));
 class NotificationService {
-    static createNotification(userId, taskId, type, message) {
-        return notification_1.default.create({ id: (0, uuid_1.v4)(), userId, taskId, type, message, isRead: false });
+    static createNotification(userId, taskId, type, message, transaction) {
+        return notification_1.default.create({ id: (0, uuid_1.v4)(), userId, taskId, type, message, isRead: false }, transaction ? { transaction } : undefined);
     }
     async getNotifications(userId) {
         return notification_1.default.findAll({ where: { userId }, include: ['user', 'task'] });

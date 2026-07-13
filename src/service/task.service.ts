@@ -8,6 +8,8 @@ import TagModel from '../db/models/tagmodel';
 import { NotificationService } from './notification.service';
 import { cacheData, deleteCachedData, getCachedData } from '../db/redis.client';
 import { io } from '../server';
+import connection from '../db/sequelize';
+
 export class TaskService {
     private taskRepo: TaskRepository;
     private tagRepo: TagRepository;
@@ -15,6 +17,17 @@ export class TaskService {
     constructor() {
         this.taskRepo = new TaskRepository();
         this.tagRepo = new TagRepository();
+    }
+
+    // Cache is a write-through, best-effort accelerator for reads. It must
+    // never be consulted to decide whether a write happens, and every
+    // mutation must invalidate it so reads can't observe stale data forever.
+    private async invalidateTaskCaches(taskId: string): Promise<void> {
+        await Promise.all([
+            deleteCachedData(`task:${taskId}`),
+            deleteCachedData(`task_status:${taskId}`),
+            deleteCachedData('tasks:all'),
+        ]);
     }
 
     public async createTask(taskData: CreateTaskInput, userId: string): Promise<TaskModel> {
@@ -25,19 +38,12 @@ export class TaskService {
             status: taskData.status || 'Pending'
         };
 
-        let task: TaskModel;
-        try {
-            task = await this.taskRepo.createTask(taskToCreate);
-            console.log(`Task created with ID: ${task.id}`);
-        } catch (error) {
-            console.error('Error creating task:', error);
-            throw new Error('Error creating task');
-        }
+        const task = await this.taskRepo.createTask(taskToCreate);
+        console.log(`Task created with ID: ${task.id}`);
 
-        // Cache the created task
+        await this.invalidateTaskCaches(task.id);
         try {
             await cacheData(`task:${task.id}`, JSON.stringify(task));
-            console.log(`Cached task with key: task:${task.id}`);
         } catch (error) {
             console.error('Error caching task data:', error);
         }
@@ -45,41 +51,37 @@ export class TaskService {
         return task;
     }
 
-    public async assignTask(taskId: string, assignedToId: string): Promise<TaskModel | null> {
-        const task = await this.taskRepo.findById(taskId);
-        if (!task) {
-            console.error(`Task with ID ${taskId} not found.`);
-            throw new Error('Task not found');
-        }
-
-        // Validate the assigned user exists
+    public async assignTask(taskId: string, assignedToId: string, userId: string, userRole: string): Promise<TaskModel> {
         const assignedUser = await UserModel.findByPk(assignedToId);
         if (!assignedUser) {
-            console.error(`Assigned user with ID ${assignedToId} does not exist.`);
             throw new Error('Assigned user does not exist');
         }
 
-        // Update task details
-        task.assignedToId = assignedUser.id;
-        task.status = 'In Progress';
+        const task = await connection.transaction(async (t) => {
+            const task = await this.taskRepo.findByIdForUpdate(taskId, t);
+            if (!task) {
+                throw new Error('Task not found');
+            }
 
-        // Create a notification
-        const message = `You have been assigned a new task: ${task.title}`;
-        await NotificationService.createNotification(assignedUser.id, taskId, 'task_assigned', message);
+            if (userRole !== 'Admin' && task.createdById !== userId) {
+                throw new Error('Forbidden: Not authorized to assign this task');
+            }
 
-        io.emit('task_assigned', task.title, task.assignedToId)
+            task.assignedToId = assignedUser.id;
+            task.status = 'In Progress';
+            await task.save({ transaction: t });
 
-        // Save the task
-        try {
-            await task.save();
-        } catch (error) {
-            console.error('Error saving task:', error);
-        }
+            const message = `You have been assigned a new task: ${task.title}`;
+            await NotificationService.createNotification(assignedUser.id, taskId, 'task_assigned', message, t);
 
-        // Cache the updated task
+            return task;
+        });
+
+        io.emit('task_assigned', task.title, task.assignedToId);
+
+        await this.invalidateTaskCaches(task.id);
         try {
             await cacheData(`task:${task.id}`, JSON.stringify(task));
-            console.log(`Cached task with key: task:${task.id}`);
         } catch (error) {
             console.error('Error caching task data:', error);
         }
@@ -87,15 +89,9 @@ export class TaskService {
         return task;
     }
 
-    public async updateTaskStatus(taskId: string, status: TaskStatus, userId: string, userRole: string): Promise<TaskModel | null> {
-        const cacheKey = `task_status:${taskId}`;
-        console.log(`Retrieving cache for key: ${cacheKey}`);
-        const cachedStatus = await getCachedData(cacheKey);
-        console.log(`Cached status: ${cachedStatus}`);
-
-        if (!cachedStatus) {
-            console.log('Cache miss. Updating status and caching the new value.');
-            const task = await this.taskRepo.findById(taskId);
+    public async updateTaskStatus(taskId: string, status: TaskStatus, userId: string, userRole: string): Promise<TaskModel> {
+        const task = await connection.transaction(async (t) => {
+            const task = await this.taskRepo.findByIdForUpdate(taskId, t);
             if (!task) {
                 throw new Error('Task not found');
             }
@@ -105,88 +101,84 @@ export class TaskService {
             }
 
             task.status = status;
-            await task.save();
+            await task.save({ transaction: t });
 
-            const message = `The status of task "${task.title}" has been updated to ${status}`;
-            await NotificationService.createNotification(task.assignedToId, taskId, 'task_status_updated', message);
+            // A task may not have an assignee yet (e.g. its creator changes
+            // its status before assigning it) - only notify if there's
+            // someone to notify.
+            if (task.assignedToId) {
+                const message = `The status of task "${task.title}" has been updated to ${status}`;
+                await NotificationService.createNotification(task.assignedToId, taskId, 'task_status_updated', message, t);
+            }
 
-            io.emit('task_updated', task.title, userId)
-
-            await cacheData(cacheKey, JSON.stringify(task)); 
             return task;
-        }
-
-        return JSON.parse(cachedStatus) as TaskModel; 
-    }
-
-    async addTagsToTask(taskId: string, tagIds: string[]) {
-        // Fetch the task to ensure it exists
-        const task = await TaskModel.findOne({
-            where: { id: taskId },
         });
 
-        if (!task) {
-            return {
-                message: "Failed to add tags to task",
-                error: "Task not found",
-            };
-        }
+        io.emit('task_updated', task.title, userId);
 
-        // Fetch the tags to ensure they exist
-        const tags = await Promise.all(tagIds.map(id => this.tagRepo.getTagById(id)));
-
-        // Filter out null values (i.e., non-existent tags)
-        const validTags = tags.filter((tag): tag is TagModel => tag !== null);
-
-        if (validTags.length === 0) {
-            return {
-                message: "Failed to add tags to task",
-                error: "No valid tags found",
-            };
-        }
-
-        // Since `tagId` is not designed to hold multiple tags, we'll iterate over `validTags`
-        // and update the task's `tagId` for each valid tag
-        for (const tag of validTags) {
-            await task.update({ tagId: tag.id });
-        }
-
+        await this.invalidateTaskCaches(task.id);
         try {
             await cacheData(`task:${task.id}`, JSON.stringify(task));
-            console.log(`Cached updated task with key: task:${task.id}`);
+        } catch (error) {
+            console.error('Error caching task data:', error);
+        }
+
+        return task;
+    }
+
+    async addTagsToTask(taskId: string, tagIds: string[]): Promise<TaskModel> {
+        const task = await connection.transaction(async (t) => {
+            const task = await this.taskRepo.findByIdForUpdate(taskId, t);
+            if (!task) {
+                throw new Error('Task not found');
+            }
+
+            const tags = await Promise.all(tagIds.map(id => this.tagRepo.getTagById(id)));
+            const validTags = tags.filter((tag): tag is TagModel => tag !== null);
+
+            if (validTags.length === 0) {
+                throw new Error('No valid tags found');
+            }
+
+            // Only attach tags not already associated, so retrying this call
+            // is idempotent instead of relying on catching unique-constraint errors.
+            const existingTags = await task.getTags({ transaction: t });
+            const existingTagIds = new Set(existingTags.map(tag => tag.id));
+            const newTags = validTags.filter(tag => !existingTagIds.has(tag.id));
+
+            if (newTags.length > 0) {
+                await this.taskRepo.addTagsToTask(task, newTags, t);
+            }
+
+            return task;
+        });
+
+        await this.invalidateTaskCaches(task.id);
+        try {
+            await cacheData(`task:${task.id}`, JSON.stringify(task));
         } catch (error) {
             console.error('Error caching updated task data:', error);
         }
 
-        return {
-            message: "Tags successfully associated with task",
-            task: task,
-        };
+        return task;
     }
 
 
     public async getAllTasksWithFilters(filters: GetTaskFilter): Promise<TaskModel[]> {
         const cacheKey = `tasks:filters:${JSON.stringify(filters)}`;
-        console.log(`Cache key: ${cacheKey}`);
 
-        // Attempt to retrieve cached data
         let cachedData: string | null;
         try {
             cachedData = await getCachedData(cacheKey);
-            console.log(`Retrieved cache data: ${cachedData}`);
         } catch (error) {
             console.error('Error retrieving cached data:', error);
             cachedData = null;
         }
 
         if (cachedData) {
-            console.log('Cache hit: Returning cached data');
             return JSON.parse(cachedData) as TaskModel[];
         }
 
-        console.log('Cache miss: Fetching data from repository');
-
-        // Fetch data from repository
         let result: { data: TaskModel[] };
         try {
             result = await this.taskRepo.getAllTasksWithFilters(filters);
@@ -195,10 +187,11 @@ export class TaskService {
             throw new Error('Failed to fetch tasks from repository');
         }
 
-        // Cache the newly fetched data
+        // This cache key is one of many possible filter permutations; it is
+        // deliberately left to expire via TTL rather than actively
+        // invalidated on every task mutation (see invalidateTaskCaches).
         try {
             await cacheData(cacheKey, JSON.stringify(result.data));
-            console.log('Cached new data with key:', cacheKey);
         } catch (error) {
             console.error('Error caching new data:', error);
         }
@@ -208,40 +201,29 @@ export class TaskService {
 
     async getAllTasks(): Promise<TaskModel[]> {
         const cacheKey = 'tasks:all';
-        console.log(`Fetching all tasks`);
-        console.log(`Cache key: ${cacheKey}`);
 
-        // Attempt to retrieve cached data
         let cachedData: string | null;
         try {
             cachedData = await getCachedData(cacheKey);
-            console.log(`Retrieved cache data: ${cachedData}`);
         } catch (error) {
             console.error('Error retrieving cached data:', error);
             cachedData = null;
         }
 
         if (cachedData) {
-            console.log('Cache hit: Returning cached data');
             return JSON.parse(cachedData) as TaskModel[];
         }
 
-        console.log('Cache miss: Fetching data from repository');
-
-        // Fetch data from repository
         let tasks: TaskModel[];
         try {
             tasks = await this.taskRepo.getAllTasks();
-            console.log('Fetched data from repository:', tasks);
         } catch (error) {
             console.error('Error fetching data from repository:', error);
             throw new Error('Failed to fetch tasks from repository');
         }
 
-        // Cache the newly fetched data
         try {
             await cacheData(cacheKey, JSON.stringify(tasks));
-            console.log('Cached new data with key:', cacheKey);
         } catch (error) {
             console.error('Error caching new data:', error);
         }
@@ -250,75 +232,45 @@ export class TaskService {
     }
 
     async deleteTaskById(taskId: string): Promise<boolean> {
-        const cacheKey = `task:${taskId}`;
-        const allTasksCacheKey = 'tasks:all';
-        console.log(`Deleting task by id: ${taskId}`);
-    
-        try {
-            // Fetch task from repository
-            const task = await this.taskRepo.findById(taskId);
-            if (!task) {
-                console.log('Task not found in repository');
-                return false;
-            }
-    
-            // Delete the task
-            const result = await this.taskRepo.deleteTaskById(taskId);
-            if (result > 0) { // Check if at least one row was affected
-                console.log(`Task deleted: ${taskId}`);
-    
-                // Invalidate the cache for this task
-                await deleteCachedData(cacheKey);
-    
-                // Refresh the cache for all tasks
-                const allTasks = await this.taskRepo.getAllTasks();
-                await cacheData(allTasksCacheKey, JSON.stringify(allTasks));
-                console.log('Updated cache for all tasks after deletion.');
-    
-                return true;
-            } else {
-                console.log('No task was deleted');
-                return false;
-            }
-        } catch (error) {
-            console.error('Error deleting task:', error);
-            throw new Error('Failed to delete task');
+        const task = await this.taskRepo.findById(taskId);
+        if (!task) {
+            return false;
         }
+
+        const result = await this.taskRepo.deleteTaskById(taskId);
+        if (result === 0) {
+            return false;
+        }
+
+        await this.invalidateTaskCaches(taskId);
+        return true;
     }
 
     async getTaskById(taskId: string) {
         const cacheKey = `task:${taskId}`;
-        console.log(`Fetching task by id: ${taskId}`);
 
         try {
             const cachedData = await getCachedData(cacheKey);
             if (cachedData) {
-                console.log('Cache hit: Returning cached data');
                 return JSON.parse(cachedData) as TaskModel;
             }
-            console.log('Cache miss: Fetching data from repository');
         } catch (error) {
             console.error('Error retrieving cached data:', error);
         }
 
-        // Fetch task from repository
         let task: TaskModel | null;
         try {
             task = await this.taskRepo.findById(taskId);
             if (!task) {
-                console.log('Task not found in repository');
                 return null;
             }
-            console.log('Fetched data from repository:', task);
         } catch (error) {
             console.error('Error fetching data from repository:', error);
             throw new Error('Failed to fetch task from repository');
         }
 
-        // Cache the fetched data
         try {
             await cacheData(cacheKey, JSON.stringify(task));
-            console.log('Cached new data with key:', cacheKey);
         } catch (error) {
             console.error('Error caching new data:', error);
         }

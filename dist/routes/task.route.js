@@ -16,9 +16,9 @@ const taskController = new task_controller_1.TaskController(taskService);
    *   description: API endpoints to manage task
 */
 router.post('/tasks', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Admin', 'Regular']), taskController.createTask.bind(taskController));
-router.put('/:taskId/assign/:assignedToId', auth_middleware_1.authenticate, taskController.assignTask.bind(taskController));
+router.put('/:taskId/assign/:assignedToId', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Admin', 'Regular']), taskController.assignTask.bind(taskController));
 router.put('/:taskId/status', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Admin', 'Regular']), taskController.updateTaskStatus.bind(taskController));
-router.post('/:taskId/add-tags', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Regular']), taskController.addTagsToTask.bind(taskController));
+router.post('/:taskId/add-tags', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Admin', 'Regular']), taskController.addTagsToTask.bind(taskController));
 router.get('/all-tasks', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Admin']), taskController.getAllTasks.bind(taskController));
 router.get('/filtered-tasks', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Admin', 'Regular']), taskController.getAllTasksWithFilters.bind(taskController));
 router.delete('/:taskId', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)(['Admin', 'Regular']), taskController.deleteTask.bind(taskController));

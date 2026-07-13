@@ -1,4 +1,4 @@
-import { BelongsToManyAddAssociationMixin, DataTypes, Model } from 'sequelize';
+import { BelongsToManyAddAssociationMixin, DataTypes, Model, Transaction } from 'sequelize';
 import UserModel from './usermodel';
 import connection from '../sequelize';
 import TagModel from './tagmodel';
@@ -12,7 +12,6 @@ interface TaskAttributes {
   createdById: string;
   assignedToId?: string; // Optional
   dueDate?: Date; // Optional
-  tagId?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -25,11 +24,11 @@ class TaskModel extends Model<TaskAttributes> implements TaskAttributes {
   public createdById!: string;
   public assignedToId?: string; // Optional
   public dueDate?: Date; // Optional
-  public tagId?: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
   public addTags!: BelongsToManyAddAssociationMixin<TagModel, string>;
+  public getTags!: (options?: { transaction?: Transaction }) => Promise<TagModel[]>;
 
   static associate() {
     TaskModel.belongsTo(UserModel, {
@@ -88,14 +87,6 @@ TaskModel.init(
     dueDate: {
       type: DataTypes.DATE,
       allowNull: true, // Due date is optional
-    },
-    tagId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: 'tagsTable',
-        key: 'id',
-      }
     },
     createdAt: {
       type: DataTypes.DATE,
